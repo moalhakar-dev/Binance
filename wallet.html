@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <title>محفظة Binance Invest • أصولك الرقمية وأرصدتك</title>
+    <meta name="description" content="تتبع محفظتك الاستثمارية في Binance Invest. اعرض أصولك الرقمية، رصيدك الحالي، وأحدث المعاملات في مكان واحد." />
+    <meta name="keywords" content="محفظة, استثمار, Binance, أرباح, أصول رقمية, رصيد, سحب, إيداع" />
+    <link rel="canonical" href="https://binanceinvestment.pages.dev/wallet.html" />
+    <meta property="og:title" content="محفظة Binance Invest • أصولك الرقمية وأرصدتك" />
+    <meta property="og:description" content="تتبع محفظتك الاستثمارية في Binance Invest. اعرض أصولك الرقمية، رصيدك الحالي، وأحدث المعاملات في مكان واحد." />
+    <meta property="og:image" content="https://binanceinvestment.pages.dev/qe.png" />
+    <meta property="og:url" content="https://binanceinvestment.pages.dev/wallet.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Binance Invest" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="محفظة Binance Invest • أصولك الرقمية وأرصدتك" />
+    <meta name="twitter:description" content="تتبع محفظتك الاستثمارية في Binance Invest. اعرض أصولك الرقمية، رصيدك الحالي، وأحدث المعاملات في مكان واحد." />
+    <meta name="twitter:image" content="https://binanceinvestment.pages.dev/qe.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg: rgba(20, 30, 60, 0.25);
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #e0e5f0;
+            --text-muted: #b0b8d0;
+            --border-light: rgba(255, 255, 255, 0.08);
+            --sidebar-width: 260px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            --gap: 20px;
+            --padding-section: 24px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.6;
+            direction: rtl;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: pan-y;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('ql.png') center/cover no-repeat;
+            z-index: -3;
+            opacity: 1;
+            filter: brightness(1.1) saturate(1.1);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(10, 17, 40, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(10, 17, 40, 0.1) 0%, transparent 70%),
+                        linear-gradient(180deg, rgba(7, 11, 26, 0.15) 0%, rgba(7, 11, 26, 0.3) 100%);
+            z-index: -2;
+            backdrop-filter: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 30, 60, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+
+        .fab-support {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #0a0f1e;
+            border: none;
+            cursor: pointer;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(243, 186, 47, 0.5);
+            z-index: 100;
+            transition: all 0.3s;
+            text-decoration: none;
+            animation: float 3s ease-in-out infinite;
+        }
+        .fab-support:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(243, 186, 47, 0.7);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar {
+            width: var(--sidebar-width); background: rgba(10,17,40,0.85); backdrop-filter: blur(30px);
+            border-left: 1px solid rgba(255,255,255,0.1); padding: 24px 16px;
+            display: flex; flex-direction: column; position: fixed; top: 0; right: 0; bottom: 0;
+            z-index: 50; transition: transform var(--transition); transform: translateX(0);
+        }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; padding: 0 8px; }
+        .sidebar-logo .icon {
+            width: 40px; height: 40px; border-radius: 10px; background: rgba(243,186,47,0.15);
+            border: 1px solid rgba(243,186,47,0.4); overflow: hidden; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(243,186,47,0.3);
+        }
+        .sidebar-logo .icon img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-logo .text { font-weight: 900; font-size: 18px; color: var(--gold); text-shadow: 0 0 15px rgba(243,186,47,0.4); }
+        .nav-menu { list-style: none; flex: 1; overflow-y: auto; }
+        .nav-menu li { margin-bottom: 6px; }
+        .nav-menu a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px;
+            color: var(--text-dim); text-decoration: none; font-weight: 500; font-size: 14px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .nav-menu a:hover, .nav-menu a.active { background: rgba(243,186,47,0.15); color: var(--gold); box-shadow: 0 0 15px rgba(243,186,47,0.1); }
+        .nav-menu a .emoji { font-size: 18px; }
+        .sidebar-footer {
+            margin-top: auto; padding: 16px 0 0; border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 12px; color: var(--text-muted); text-align: center;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.03); border-radius: 14px; }
+        .user-avatar {
+            width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center; font-weight: 800; color: #0a0f1e; font-size: 16px; flex-shrink: 0;
+        }
+        .user-name { font-weight: 600; font-size: 13px; color: var(--text); }
+
+        .main-content {
+            flex: 1; margin-right: var(--sidebar-width); padding: var(--padding-section);
+            transition: margin var(--transition); display: flex; flex-direction: column; gap: var(--gap);
+            overflow-x: hidden; touch-action: pan-y;
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .page-title h1 { font-size: 26px; font-weight: 900; text-shadow: 0 0 25px rgba(0,0,0,0.9); }
+        .page-title .gold { color: var(--gold); text-shadow: 0 0 25px rgba(0,0,0,0.9); }
+        .page-title p { font-size: 13px; color: var(--text-dim); text-shadow: 0 0 15px rgba(0,0,0,0.9); margin-top: 2px; }
+        .top-actions { display: flex; gap: 12px; align-items: center; }
+        .btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); color: #0a0f1e;
+            font-weight: 700; padding: 10px 20px; border-radius: 40px; border: none; cursor: pointer;
+            font-family: inherit; font-size: 13px; box-shadow: 0 8px 20px rgba(243,186,47,0.35);
+            transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(243,186,47,0.5); }
+        .btn-outline {
+            background: transparent; color: var(--gold); border: 1px solid rgba(243,186,47,0.6);
+            box-shadow: none; text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .btn-outline:hover { background: rgba(243,186,47,0.15); }
+        .menu-toggle { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+
+        .wallet-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: start;
+        }
+        .card {
+            background: var(--card-bg); backdrop-filter: blur(8px);
+            border: 1px solid rgba(243,186,47,0.3);
+            border-radius: var(--radius-xl); padding: 24px;
+            display: flex; flex-direction: column; gap: 20px;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9);
+        }
+        .card:hover { background: rgba(20,30,60,0.3); }
+        .card h2 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+        .card h2 .gold { color: var(--gold); }
+        .card .subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+
+        .balance-display {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(243,186,47,0.4);
+            border-radius: 16px; padding: 20px; text-align: center;
+        }
+        .balance-amount { font-size: 36px; font-weight: 900; color: var(--gold); direction: ltr; }
+        .balance-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .asset-list { display: flex; flex-direction: column; gap: 12px; }
+        .asset-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; background: rgba(255,255,255,0.03);
+            border-radius: 14px; border: 1px solid rgba(255,255,255,0.06);
+        }
+        .asset-name { font-weight: 700; color: var(--text); }
+        .asset-amount { font-weight: 600; color: var(--text-dim); direction: ltr; }
+        .asset-change { font-size: 11px; color: #22c55e; }
+        .asset-change.negative { color: #ef4444; }
+
+        .transactions-table {
+            width: 100%; border-collapse: collapse; font-size: 12px;
+        }
+        .transactions-table th {
+            text-align: right; padding: 10px 8px; color: var(--text-muted);
+            font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 11px;
+        }
+        .transactions-table td {
+            padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text-dim); font-size: 11px;
+        }
+        .badge {
+            padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+        }
+        .badge-completed { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .badge-pending { background: rgba(243,186,47,0.2); color: var(--gold); }
+
+        @media (max-width: 768px) {
+            .wallet-grid { grid-template-columns: 1fr; }
+            .sidebar { transform: translateX(100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-right: 0; padding: 16px; }
+            .menu-toggle { display: block; }
+            .top-bar { flex-wrap: wrap; gap: 12px; }
+            .top-actions { flex-wrap: wrap; }
+            .transactions-table { display: block; overflow-x: auto; white-space: nowrap; }
+            .fab-support { width: 50px; height: 50px; font-size: 24px; bottom: 20px; left: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="https://t.me/BinanceInvestmentsSupport" target="_blank" class="fab-support" title="الدعم الفني">💬</a>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="toast" id="toast"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo"><div class="icon"><img src="qa.png" alt="Logo" /></div><span class="text">BINANCE</span></div>
+        <div class="user-info">
+            <div class="user-avatar" id="sidebarAvatar">م</div>
+            <div>
+                <div class="user-name" id="sidebarUserName">محمد أحمد</div>
+                <div style="font-size:10px;color:var(--text-muted)">مستثمر فضي</div>
+            </div>
+        </div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="dashboard.html"><span class="emoji">📊</span> نظرة عامة</a></li>
+            <li><a href="investments.html"><span class="emoji">💼</span> الاستثمارات النشطة</a></li>
+            <li><a href="my-plan.html"><span class="emoji">🎯</span> خطتي</a></li>
+            <li><a href="wallet.html" class="active"><span class="emoji">💰</span> المحفظة</a></li>
+            <li><a href="withdraw.html"><span class="emoji">📤</span> سحب الأرباح</a></li>
+            <li><a href="deposit.html"><span class="emoji">💳</span> الإيداع</a></li>
+            <li><a href="transactions.html"><span class="emoji">📋</span> المعاملات</a></li>
+            <li><a href="activity.html"><span class="emoji">🔄</span> نشاط المنصة</a></li>
+            <li><a href="settings.html"><span class="emoji">⚙️</span> الإعدادات</a></li>
+            <li><a href="index.html"><span class="emoji">🚪</span> تسجيل الخروج</a></li>
+        </ul>
+        <div class="sidebar-footer">© 2026 Binance Invest</div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="page-title">
+                <h1><span class="gold">المحفظة</span></h1>
+                <p>أرصدتك وأصولك الرقمية في مكان واحد</p>
+            </div>
+            <div class="top-actions">
+                <a href="deposit.html" class="btn btn-outline">💳 إيداع</a>
+                <a href="withdraw.html" class="btn">📤 سحب</a>
+            </div>
+        </div>
+
+        <div class="wallet-grid" id="walletContent">
+            <div class="card">
+                <h2>💰 <span class="gold">الرصيد الإجمالي</span></h2>
+                <div class="balance-display">
+                    <div class="balance-label">إجمالي القيمة (USD)</div>
+                    <div class="balance-amount" id="totalValue">$0</div>
+                </div>
+                <div style="justify-content:space-between;padding:12px 0;">
+                    <span style="color:var(--text-dim)">💵 الرصيد المتاح</span>
+                    <span class="val" id="liquidBalance" style="font-weight:700;color:var(--text);direction:ltr;">$0</span>
+                </div>
+            </div>
+            <div class="card">
+                <h2>🪙 <span class="gold">الأصول الرقمية</span></h2>
+                <div class="asset-list" id="assetList">
+                    <p style="text-align:center;color:var(--text-muted);">لا توجد أصول بعد</p>
+                </div>
+            </div>
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📋 <span class="gold">أحدث المعاملات</span></h2>
+                <table class="transactions-table">
+                    <thead>
+                        <tr><th>التاريخ</th><th>النوع</th><th>العملة</th><th>المبلغ</th><th>الحالة</th></tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr><td colspan="5" style="text-align:center;padding:20px;">لا توجد معاملات حديثة</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB78JT_cbPMizvzKWBrQoQUe3-zukHrr1U",
+            authDomain: "pharacoin.firebaseapp.com",
+            projectId: "pharacoin",
+            storageBucket: "pharacoin.firebasestorage.app",
+            messagingSenderId: "1047668783635",
+            appId: "1:1047668783635:web:10673630ede69c60181de6",
+            measurementId: "G-06CG470MPX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let unsubscribeUser = null;
+        const maxBalance = 1250;
+        const STORAGE_KEY = 'binance_deadline';
+        let deadline;
+
+        function calculateBalanceLocally() {
+            const now = new Date();
+            const totalDuration = 4;
+            const start = new Date(deadline.getTime() - totalDuration * 24 * 60 * 60 * 1000);
+            const elapsed = (now - start) / (1000 * 60 * 60 * 24);
+            if (elapsed >= totalDuration) return 0;
+            return Math.floor(maxBalance * Math.pow(0.5, Math.min(elapsed, totalDuration)));
+        }
+
+        function renderAssets(assets) {
+            const container = document.getElementById('assetList');
+            if (!assets || assets.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);">لا توجد أصول بعد</p>';
+                return;
+            }
+            container.innerHTML = assets.map(a => `
+                <div class="asset-item">
+                    <div>
+                        <div class="asset-name">${a.name} (${a.symbol})</div>
+                        <div class="asset-change ${a.change < 0 ? 'negative' : ''}">
+                            ${a.change >= 0 ? '▲' : '▼'} ${Math.abs(a.change).toFixed(2)}%
+                        </div>
+                    </div>
+                    <div>
+                        <div class="asset-amount">${a.amount.toFixed(4)} ${a.symbol}</div>
+                        <div style="font-size:11px;color:var(--text-muted);">$${(a.amount * a.price).toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateBalanceDisplay(balance) {
+            document.getElementById('liquidBalance').textContent = '$' + balance.toLocaleString('en-US');
+            document.getElementById('totalValue').textContent = '$' + balance.toLocaleString('en-US');
+        }
+
+        function renderTransactions(transactions) {
+            const tbody = document.getElementById('transactionsBody');
+            if (!transactions || transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">لا توجد معاملات حديثة</td></tr>';
+                return;
+            }
+            tbody.innerHTML = transactions.map(tx => `
+                <tr>
+                    <td>${tx.date || '---'}</td>
+                    <td>${tx.type || '---'}</td>
+                    <td>${tx.currency || '---'}</td>
+                    <td>${tx.amount || '---'}</td>
+                    <td><span class="badge ${tx.status === 'completed' ? 'badge-completed' : 'badge-pending'}">${tx.status === 'completed' ? 'مكتملة' : 'معلقة'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function listenToUserBalance(uid) {
+            if (unsubscribeUser) unsubscribeUser();
+
+            unsubscribeUser = db.collection('users').doc(uid).onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.fullName) {
+                        document.getElementById('sidebarUserName').textContent = data.fullName;
+                        document.getElementById('sidebarAvatar').textContent = data.fullName.charAt(0);
+                    }
+                    if (data.balance !== undefined) {
+                        updateBalanceDisplay(data.balance);
+                    } else {
+                        updateBalanceDisplay(calculateBalanceLocally());
+                    }
+                    if (data.assets) {
+                        renderAssets(data.assets);
+                    } else {
+                        renderAssets([]);
+                    }
+                    if (data.deadline) {
+                        localStorage.setItem(STORAGE_KEY, new Date(data.deadline).getTime().toString());
+                    }
+                    if (data.recentTransactions) {
+                        renderTransactions(data.recentTransactions);
+                    } else {
+                        renderTransactions([]);
+                    }
+                }
+            }, error => {
+                console.log('تعذر الاتصال بـ Firestore، استخدام البيانات المحلية');
+                updateBalanceDisplay(calculateBalanceLocally());
+                renderAssets([]);
+            });
+        }
+
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            const storedDeadline = localStorage.getItem(STORAGE_KEY);
+            if (storedDeadline) {
+                deadline = new Date(parseInt(storedDeadline));
+            } else {
+                deadline = new Date();
+                deadline.setDate(deadline.getDate() + 4);
+                localStorage.setItem(STORAGE_KEY, deadline.getTime().toString());
+            }
+
+            if (user) {
+                listenToUserBalance(user.uid);
+            } else {
+                updateBalanceDisplay(calculateBalanceLocally());
+                renderAssets([]);
+            }
+        });
+
+        setInterval(() => {
+            if (!currentUser) {
+                updateBalanceDisplay(calculateBalanceLocally());
+            }
+        }, 30000);
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+        menuToggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.addEventListener('touchstart', (e) => { window.touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        sidebar.addEventListener('touchend', (e) => { if (e.changedTouches[0].screenX - window.touchStartX > 80) closeSidebar(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar(); });
+
+        // ==================== تفعيل الرابط النشط تلقائيًا ====================
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        document.querySelectorAll('#navMenu a').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === currentPage);
+        });
+    </script>
+</body>
+</html>

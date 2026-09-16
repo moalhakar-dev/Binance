@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <title>Binance Invest • الإعدادات</title>
+    <meta name="description" content="إعدادات حسابك في Binance Invest - تحكم في ملفك الشخصي وأمان حسابك." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg: rgba(15, 25, 55, 0.22);
+            --card-border: rgba(243, 186, 47, 0.3);
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #d8ddf0;
+            --text-muted: #9298b8;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --sidebar-width: 260px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            --gap: 16px;
+            --padding-section: 28px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.7;
+            direction: rtl;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: pan-y;
+            transition: direction 0.3s ease;
+        }
+        body.ltr { direction: ltr; }
+        body.ltr .sidebar { right: auto; left: 0; border-left: none; border-right: 1px solid rgba(255,255,255,0.08); }
+        body.ltr .main-content { margin-right: 0; margin-left: var(--sidebar-width); }
+        body.ltr .accordion-arrow { transform: rotate(0deg); }
+        body.ltr .accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+        body.ltr .form-group { text-align: left; }
+        body.ltr .transactions-table th, body.ltr .transactions-table td { text-align: left; }
+
+        @media (max-width: 768px) {
+            body.ltr .main-content { margin-left: 0; }
+            body.ltr .sidebar { transform: translateX(-100%); }
+            body.ltr .sidebar.open { transform: translateX(0); }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('qm.png') center/cover no-repeat;
+            z-index: -3;
+            opacity: 1;
+            filter: brightness(1.05) saturate(1.08);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 30%, rgba(243, 186, 47, 0.04) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 70%, rgba(10, 17, 40, 0.25) 0%, transparent 70%),
+                        linear-gradient(180deg, rgba(7, 11, 26, 0.12) 0%, rgba(7, 11, 26, 0.22) 100%);
+            z-index: -2;
+            backdrop-filter: blur(1px);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 25, 55, 0.95);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--gold);
+            color: var(--gold-light);
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(243,186,47,0.2) inset;
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar {
+            width: var(--sidebar-width); background: rgba(8, 14, 35, 0.88); backdrop-filter: blur(40px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08); padding: 24px 16px;
+            display: flex; flex-direction: column; position: fixed; top: 0; right: 0; bottom: 0;
+            z-index: 50; transition: transform var(--transition); transform: translateX(0);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+        }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; padding: 0 8px; }
+        .sidebar-logo .icon {
+            width: 42px; height: 42px; border-radius: 12px; background: rgba(243,186,47,0.12);
+            border: 1px solid rgba(243,186,47,0.35); overflow: hidden; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(243,186,47,0.25);
+        }
+        .sidebar-logo .icon img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-logo .text { font-weight: 900; font-size: 19px; color: var(--gold); text-shadow: 0 0 20px rgba(243,186,47,0.5); letter-spacing: 0.5px; }
+        .nav-menu { list-style: none; flex: 1; overflow-y: auto; }
+        .nav-menu li { margin-bottom: 6px; }
+        .nav-menu a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px;
+            color: var(--text-dim); text-decoration: none; font-weight: 500; font-size: 14px;
+            transition: all 0.25s; cursor: pointer; position: relative;
+        }
+        .nav-menu a::before {
+            content: ''; position: absolute; inset: 0; border-radius: 14px;
+            background: linear-gradient(135deg, rgba(243,186,47,0.2), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .nav-menu a:hover::before, .nav-menu a.active::before { opacity: 1; }
+        .nav-menu a:hover, .nav-menu a.active { color: var(--gold); }
+        .nav-menu a .emoji { font-size: 18px; }
+        .sidebar-footer {
+            margin-top: auto; padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 11px; color: var(--text-muted); text-align: center; letter-spacing: 0.4px;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; margin-bottom: 14px; background: rgba(255,255,255,0.025); border-radius: 14px; }
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center; font-weight: 800; color: #0a0f1e; font-size: 17px; flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(243,186,47,0.4);
+        }
+        .user-name { font-weight: 600; font-size: 13px; color: var(--text); }
+
+        .main-content {
+            flex: 1; margin-right: var(--sidebar-width); padding: var(--padding-section);
+            transition: margin var(--transition); display: flex; flex-direction: column; gap: 24px;
+            overflow-x: hidden; touch-action: pan-y;
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .page-title h1 { font-size: 28px; font-weight: 900; text-shadow: 0 0 30px rgba(0,0,0,0.95); letter-spacing: -0.5px; }
+        .page-title .gold { color: var(--gold); text-shadow: 0 0 30px rgba(0,0,0,0.95), 0 0 15px rgba(243,186,47,0.5); }
+        .page-title p { font-size: 14px; color: var(--text-dim); text-shadow: 0 0 20px rgba(0,0,0,0.9); margin-top: 4px; }
+        .top-actions { display: flex; gap: 12px; align-items: center; }
+        .btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); color: #0a0f1e;
+            font-weight: 700; padding: 10px 22px; border-radius: 40px; border: none; cursor: pointer;
+            font-family: inherit; font-size: 13px; box-shadow: 0 8px 25px rgba(243,186,47,0.35);
+            transition: all 0.25s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            letter-spacing: 0.3px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(243,186,47,0.55); }
+        .btn-outline {
+            background: transparent; color: var(--gold-light); border: 1px solid rgba(243,186,47,0.5);
+            box-shadow: none; text-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+        .btn-outline:hover { background: rgba(243,186,47,0.08); border-color: var(--gold); }
+        .menu-toggle { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; text-shadow: 0 0 15px rgba(0,0,0,0.8); }
+
+        .settings-container {
+            display: flex; flex-direction: column; gap: var(--gap);
+        }
+
+        .accordion-item {
+            background: var(--card-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 35px -12px rgba(0,0,0,0.35);
+        }
+        .accordion-item:hover {
+            border-color: rgba(243,186,47,0.45);
+            box-shadow: 0 20px 45px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(243,186,47,0.1) inset;
+        }
+
+        .accordion-header {
+            display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+            cursor: pointer; user-select: none; transition: background 0.3s;
+        }
+        .accordion-header:hover {
+            background: rgba(243,186,47,0.05);
+        }
+
+        .accordion-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(243,186,47,0.1); display: flex; align-items: center; justify-content: center;
+            font-size: 20px; border: 1px solid rgba(243,186,47,0.3); flex-shrink: 0;
+        }
+
+        .accordion-title {
+            flex: 1;
+        }
+        .accordion-title h3 {
+            font-size: 18px; font-weight: 800; color: var(--gold); margin-bottom: 2px;
+        }
+        .accordion-title p {
+            font-size: 12px; color: var(--text-muted); margin: 0;
+        }
+
+        .accordion-arrow {
+            font-size: 22px; color: var(--gold); transition: transform 0.35s ease;
+            flex-shrink: 0;
+        }
+        .accordion-item.open .accordion-arrow {
+            transform: rotate(180deg);
+        }
+
+        .accordion-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s;
+            padding: 0 24px;
+        }
+        .accordion-item.open .accordion-body {
+            max-height: 700px; padding: 0 24px 24px;
+        }
+
+        .accordion-body .form-group { text-align: right; margin-bottom: 14px; }
+        .accordion-body .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.2px; }
+        .accordion-body .form-group input,
+        .accordion-body .form-group select {
+            width: 100%; padding: 13px 16px; border-radius: var(--radius-md);
+            border: 1px solid rgba(243,186,47,0.25); background: rgba(0,0,0,0.25);
+            color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .accordion-body .form-group input:focus,
+        .accordion-body .form-group select:focus {
+            border-color: var(--gold); box-shadow: 0 0 0 4px rgba(243,186,47,0.15), inset 0 2px 4px rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.35);
+        }
+        .accordion-body .form-group select option { background: #0a1128; color: #fff; }
+
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-row .lbl { font-size: 14px; color: var(--text-dim); font-weight: 500; }
+        .toggle-row .lbl small { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .switch {
+            position: relative; width: 52px; height: 28px; flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.12); transition: 0.35s; border-radius: 30px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 22px; width: 22px;
+            left: 3px; bottom: 3px; background: #fff; transition: 0.35s; border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        input:checked + .slider { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); box-shadow: 0 0 15px rgba(243,186,47,0.4); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .save-btn {
+            width: 100%; padding: 14px; font-size: 15px; font-weight: 800; letter-spacing: 0.5px;
+            border-radius: var(--radius-md); margin-top: 8px;
+            transition: all 0.35s;
+        }
+        .save-btn:active { transform: scale(0.97); }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-right: 0; padding: 16px; }
+            .menu-toggle { display: block; }
+            .top-bar { flex-wrap: wrap; gap: 12px; }
+            .top-actions { flex-wrap: wrap; }
+            .accordion-header { padding: 16px 18px; }
+            .accordion-body { padding: 0 18px; }
+            .accordion-item.open .accordion-body { padding: 0 18px 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="toast" id="toast"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo"><div class="icon"><img src="qa.png" alt="Logo" /></div><span class="text">BINANCE</span></div>
+        <div class="user-info"><div class="user-avatar">م</div><div><div class="user-name">محمد أحمد</div><div style="font-size:10px;color:var(--text-muted)">مستثمر فضي</div></div></div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="dashboard.html"><span class="emoji">📊</span> نظرة عامة</a></li>
+            <li><a href="investments.html"><span class="emoji">💼</span> الاستثمارات النشطة</a></li>
+            <li><a href="my-plan.html"><span class="emoji">🎯</span> خطتي</a></li>
+            <li><a href="wallet.html"><span class="emoji">💰</span> المحفظة</a></li>
+            <li><a href="withdraw.html"><span class="emoji">📤</span> سحب الأرباح</a></li>
+            <li><a href="deposit.html"><span class="emoji">💳</span> الإيداع</a></li>
+            <li><a href="transactions.html"><span class="emoji">📋</span> المعاملات</a></li>
+            <li><a href="activity.html"><span class="emoji">🔄</span> نشاط المنصة</a></li>
+            <li><a href="settings.html" class="active"><span class="emoji">⚙️</span> الإعدادات</a></li>
+            <li><a href="index.html"><span class="emoji">🚪</span> تسجيل الخروج</a></li>
+        </ul>
+        <div class="sidebar-footer">© 2026 Binance Invest</div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="page-title">
+                <h1><span class="gold">الإعدادات</span></h1>
+                <p>تحكم في ملفك الشخصي وتفضيلات الحساب</p>
+            </div>
+            <div class="top-actions">
+                <a href="dashboard.html" class="btn btn-outline">📊 لوحة التحكم</a>
+            </div>
+        </div>
+
+        <div class="settings-container">
+            <!-- اللغة -->
+            <div class="accordion-item open">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-icon">🌐</div>
+                    <div class="accordion-title">
+                        <h3>اللغة</h3>
+                        <p>تغيير لغة الموقع</p>
+                    </div>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-body">
+                    <div class="form-group">
+                        <label>اختر اللغة</label>
+                        <select id="langSelect" onchange="saveLanguage()">
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الملف الشخصي -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-icon">👤</div>
+                    <div class="accordion-title">
+                        <h3>الملف الشخصي</h3>
+                        <p>الاسم، البريد الإلكتروني، ورقم الهاتف</p>
+                    </div>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-body">
+                    <div class="form-group">
+                        <label>الاسم الكامل</label>
+                        <input type="text" id="fullName" value="محمد أحمد" placeholder="أدخل اسمك الكامل" />
+                    </div>
+                    <div class="form-group">
+                        <label>البريد الإلكتروني</label>
+                        <input type="email" id="email" value="mohamed@example.com" placeholder="example@email.com" />
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="phone" value="01012345678" placeholder="01xxxxxxxxx" />
+                    </div>
+                    <button class="btn save-btn" onclick="saveProfile()">💾 حفظ التغييرات</button>
+                </div>
+            </div>
+
+            <!-- الأمان -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-icon">🔒</div>
+                    <div class="accordion-title">
+                        <h3>الأمان</h3>
+                        <p>تغيير كلمة المرور وحماية الحساب</p>
+                    </div>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-body">
+                    <div class="form-group">
+                        <label>كلمة المرور الحالية</label>
+                        <input type="password" id="currentPassword" placeholder="••••••••" />
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة المرور الجديدة</label>
+                        <input type="password" id="newPassword" placeholder="••••••••" />
+                    </div>
+                    <div class="form-group">
+                        <label>تأكيد كلمة المرور</label>
+                        <input type="password" id="confirmPassword" placeholder="••••••••" />
+                    </div>
+                    <button class="btn save-btn" onclick="saveSecurity()">🔐 تحديث كلمة المرور</button>
+                </div>
+            </div>
+
+            <!-- الإشعارات -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div class="accordion-icon">🔔</div>
+                    <div class="accordion-title">
+                        <h3>الإشعارات</h3>
+                        <p>تفعيل أو تعطيل التنبيهات المختلفة</p>
+                    </div>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-body">
+                    <div class="toggle-row">
+                        <span class="lbl">البريد الإلكتروني <small>استلام تنبيهات على بريدك</small></span>
+                        <label class="switch"><input type="checkbox" id="emailNotif" checked /><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <span class="lbl">الأرباح اليومية <small>إشعار عند تحقيق ربح</small></span>
+                        <label class="switch"><input type="checkbox" id="profitNotif" checked /><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <span class="lbl">السحب والإيداع <small>تنبيهات المعاملات المالية</small></span>
+                        <label class="switch"><input type="checkbox" id="withdrawNotif" checked /><span class="slider"></span></label>
+                    </div>
+                    <button class="btn save-btn" onclick="saveNotifications()">💾 حفظ الإشعارات</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ========== دوال الإعدادات ==========
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message; toast.classList.add('show');
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            item.classList.toggle('open');
+        }
+
+        function saveLanguage() {
+            const lang = document.getElementById('langSelect').value;
+            localStorage.setItem('app_lang', lang);
+            if (lang === 'en') {
+                document.documentElement.lang = 'en';
+                document.documentElement.dir = 'ltr';
+                document.body.classList.add('ltr');
+            } else {
+                document.documentElement.lang = 'ar';
+                document.documentElement.dir = 'rtl';
+                document.body.classList.remove('ltr');
+            }
+            showToast(lang === 'en' ? 'Language changed successfully' : 'تم تغيير اللغة بنجاح');
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            if (!name || !email || !phone) { showToast('⚠️ الرجاء ملء جميع الحقول'); return; }
+            localStorage.setItem('user_name', name);
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('user_phone', phone);
+            showToast('✅ تم حفظ الملف الشخصي بنجاح');
+        }
+
+        function saveSecurity() {
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            if (!current || !newPass || !confirm) { showToast('⚠️ الرجاء ملء جميع الحقول'); return; }
+            if (newPass !== confirm) { showToast('❌ كلمتا المرور غير متطابقتين'); return; }
+            showToast('✅ تم تحديث كلمة المرور بنجاح');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        function saveNotifications() {
+            const emailNotif = document.getElementById('emailNotif').checked;
+            const profitNotif = document.getElementById('profitNotif').checked;
+            const withdrawNotif = document.getElementById('withdrawNotif').checked;
+            localStorage.setItem('notif_email', emailNotif);
+            localStorage.setItem('notif_profit', profitNotif);
+            localStorage.setItem('notif_withdraw', withdrawNotif);
+            showToast('✅ تم حفظ إعدادات الإشعارات');
+        }
+
+        // تحميل القيم المحفوظة
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('app_lang') || 'ar';
+            document.getElementById('langSelect').value = savedLang;
+            if (savedLang === 'en') {
+                document.documentElement.lang = 'en';
+                document.documentElement.dir = 'ltr';
+                document.body.classList.add('ltr');
+            } else {
+                document.documentElement.lang = 'ar';
+                document.documentElement.dir = 'rtl';
+                document.body.classList.remove('ltr');
+            }
+            const savedName = localStorage.getItem('user_name');
+            if (savedName) document.getElementById('fullName').value = savedName;
+            const savedEmail = localStorage.getItem('user_email');
+            if (savedEmail) document.getElementById('email').value = savedEmail;
+            const savedPhone = localStorage.getItem('user_phone');
+            if (savedPhone) document.getElementById('phone').value = savedPhone;
+            const emailNotif = localStorage.getItem('notif_email');
+            if (emailNotif !== null) document.getElementById('emailNotif').checked = emailNotif === 'true';
+            const profitNotif = localStorage.getItem('notif_profit');
+            if (profitNotif !== null) document.getElementById('profitNotif').checked = profitNotif === 'true';
+            const withdrawNotif = localStorage.getItem('notif_withdraw');
+            if (withdrawNotif !== null) document.getElementById('withdrawNotif').checked = withdrawNotif === 'true';
+        });
+
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+        menuToggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.addEventListener('touchstart', (e) => { window.touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        sidebar.addEventListener('touchend', (e) => { if (e.changedTouches[0].screenX - window.touchStartX > 80) closeSidebar(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar(); });
+
+        // ==================== تفعيل الرابط النشط تلقائيًا ====================
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        document.querySelectorAll('#navMenu a').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === currentPage);
+        });
+    </script>
+</body>
+</html>

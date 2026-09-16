@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <title>Binance Invest • معاملاتي</title>
+    <meta name="description" content="سجل معاملاتك الشخصية في Binance Invest." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg: rgba(15, 25, 55, 0.08);
+            --card-border: rgba(243, 186, 47, 0.2);
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #e8ecf5;
+            --text-muted: #a0a8c0;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --sidebar-width: 260px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            --gap: 20px;
+            --padding-section: 24px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.7;
+            direction: rtl;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: pan-y;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('qw.png') center/cover no-repeat;
+            z-index: -3;
+            opacity: 1;
+            filter: brightness(1.15) saturate(1.1);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 30%, rgba(10, 17, 40, 0.03) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 70%, rgba(10, 17, 40, 0.06) 0%, transparent 70%),
+                        linear-gradient(180deg, rgba(7, 11, 26, 0.05) 0%, rgba(7, 11, 26, 0.1) 100%);
+            z-index: -2;
+            backdrop-filter: none;
+        }
+
+        .particles-container { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+        .particle {
+            position: absolute; background: var(--gold); border-radius: 50%;
+            filter: blur(1px); animation: floatUp 6s infinite ease-in-out; opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.5; } 90% { opacity: 0.2; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 25, 55, 0.95); backdrop-filter: blur(30px);
+            border: 1px solid var(--gold); color: var(--gold-light);
+            padding: 14px 32px; border-radius: 50px; font-weight: 700; font-size: 14px;
+            z-index: 9999; box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(243,186,47,0.2) inset;
+            opacity: 0; transform: translateX(-50%) translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar {
+            width: var(--sidebar-width); background: rgba(8, 14, 35, 0.88); backdrop-filter: blur(40px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08); padding: 24px 16px;
+            display: flex; flex-direction: column; position: fixed; top: 0; right: 0; bottom: 0;
+            z-index: 50; transition: transform var(--transition); transform: translateX(0);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+        }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; padding: 0 8px; }
+        .sidebar-logo .icon {
+            width: 42px; height: 42px; border-radius: 12px; background: rgba(243,186,47,0.12);
+            border: 1px solid rgba(243,186,47,0.35); overflow: hidden; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(243,186,47,0.25);
+        }
+        .sidebar-logo .icon img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-logo .text { font-weight: 900; font-size: 19px; color: var(--gold); text-shadow: 0 0 20px rgba(243,186,47,0.5); letter-spacing: 0.5px; }
+        .nav-menu { list-style: none; flex: 1; overflow-y: auto; }
+        .nav-menu li { margin-bottom: 6px; }
+        .nav-menu a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px;
+            color: var(--text-dim); text-decoration: none; font-weight: 500; font-size: 14px;
+            transition: all 0.25s; cursor: pointer; position: relative;
+        }
+        .nav-menu a::before {
+            content: ''; position: absolute; inset: 0; border-radius: 14px;
+            background: linear-gradient(135deg, rgba(243,186,47,0.2), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .nav-menu a:hover::before, .nav-menu a.active::before { opacity: 1; }
+        .nav-menu a:hover, .nav-menu a.active { color: var(--gold); }
+        .nav-menu a .emoji { font-size: 18px; }
+        .sidebar-footer {
+            margin-top: auto; padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 11px; color: var(--text-muted); text-align: center; letter-spacing: 0.4px;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; margin-bottom: 14px; background: rgba(255,255,255,0.025); border-radius: 14px; }
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center; font-weight: 800; color: #0a0f1e; font-size: 17px; flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(243,186,47,0.4);
+        }
+        .user-name { font-weight: 600; font-size: 13px; color: var(--text); }
+
+        .main-content {
+            flex: 1; margin-right: var(--sidebar-width); padding: var(--padding-section);
+            transition: margin var(--transition); display: flex; flex-direction: column; gap: var(--gap);
+            overflow-x: hidden; touch-action: pan-y;
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .page-title h1 { font-size: 28px; font-weight: 900; text-shadow: 0 0 30px rgba(0,0,0,0.95); letter-spacing: -0.5px; }
+        .page-title .gold { color: var(--gold); text-shadow: 0 0 30px rgba(0,0,0,0.95), 0 0 15px rgba(243,186,47,0.5); }
+        .page-title p { font-size: 14px; color: var(--text-dim); text-shadow: 0 0 20px rgba(0,0,0,0.9); margin-top: 4px; }
+        .top-actions { display: flex; gap: 12px; align-items: center; }
+        .btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); color: #0a0f1e;
+            font-weight: 700; padding: 10px 22px; border-radius: 40px; border: none; cursor: pointer;
+            font-family: inherit; font-size: 13px; box-shadow: 0 8px 25px rgba(243,186,47,0.35);
+            transition: all 0.25s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            letter-spacing: 0.3px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(243,186,47,0.55); }
+        .btn-outline {
+            background: transparent; color: var(--gold-light); border: 1px solid rgba(243,186,47,0.5);
+            box-shadow: none; text-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+        .btn-outline:hover { background: rgba(243,186,47,0.08); border-color: var(--gold); }
+        .menu-toggle { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; text-shadow: 0 0 15px rgba(0,0,0,0.8); }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl); padding: 24px;
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.3);
+        }
+
+        .stats-mini {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;
+        }
+        .stat-mini {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(243,186,47,0.1);
+            border-radius: 16px; padding: 16px; text-align: center;
+        }
+        .stat-mini .num { font-size: 24px; font-weight: 900; color: var(--gold); text-shadow: 0 0 15px rgba(0,0,0,0.9); }
+        .stat-mini .lbl { font-size: 11px; color: var(--text-dim); text-shadow: 0 0 10px rgba(0,0,0,0.9); margin-top: 4px; }
+
+        .filter-bar {
+            display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(243,186,47,0.15);
+            border-radius: 30px; padding: 8px 18px; color: var(--text-dim);
+            font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;
+            font-family: inherit; text-shadow: 0 0 10px rgba(0,0,0,0.9);
+        }
+        .filter-btn:hover { background: rgba(243,186,47,0.06); border-color: rgba(243,186,47,0.3); }
+        .filter-btn.active {
+            background: var(--gold); color: #0a0f1e; border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(243,186,47,0.4); text-shadow: none;
+        }
+
+        .transaction-list {
+            display: flex; flex-direction: column; gap: 12px;
+            max-height: 500px; overflow-y: auto; min-height: 200px;
+        }
+        .transaction-list::-webkit-scrollbar { width: 4px; }
+        .transaction-list::-webkit-scrollbar-thumb { background: rgba(243,186,47,0.3); border-radius: 10px; }
+
+        .transaction-item {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(243,186,47,0.1);
+            border-radius: 16px; padding: 14px 16px; transition: all 0.2s;
+            text-shadow: 0 0 12px rgba(0,0,0,0.9);
+        }
+        .transaction-item:hover {
+            background: rgba(243,186,47,0.04); border-color: rgba(243,186,47,0.25);
+            transform: translateY(-2px);
+        }
+        .tx-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .tx-type {
+            display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text);
+        }
+        .tx-type .icon-circle {
+            width: 32px; height: 32px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 16px;
+        }
+        .icon-deposit { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .icon-withdraw { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+        .tx-amount { font-size: 18px; font-weight: 900; direction: ltr; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        .tx-amount.positive { color: #22c55e; }
+        .tx-amount.negative { color: #ef4444; }
+
+        .tx-details {
+            display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-dim);
+            border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;
+        }
+        .tx-details span { display: flex; align-items: center; gap: 4px; }
+
+        .tx-footer {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 8px;
+        }
+        .tx-time { font-size: 11px; color: var(--text-dim); }
+        .tx-status {
+            padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+        }
+        .status-completed { background: rgba(34,197,94,0.25); color: #22c55e; }
+        .status-pending { background: rgba(243,186,47,0.25); color: var(--gold); }
+        .status-rejected { background: rgba(239,68,68,0.25); color: #ef4444; }
+
+        @media (max-width: 768px) {
+            .stats-mini { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-mini { padding: 12px 8px; }
+            .stat-mini .num { font-size: 18px; }
+            .sidebar { transform: translateX(100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-right: 0; padding: 16px; }
+            .menu-toggle { display: block; }
+            .top-bar { flex-wrap: wrap; gap: 12px; }
+            .top-actions { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container" id="particlesContainer"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="toast" id="toast"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo"><div class="icon"><img src="qa.png" alt="Logo" /></div><span class="text">BINANCE</span></div>
+        <div class="user-info">
+            <div class="user-avatar" id="sidebarAvatar">م</div>
+            <div>
+                <div class="user-name" id="sidebarUserName">محمد أحمد</div>
+                <div style="font-size:10px;color:var(--text-muted)">مستثمر فضي</div>
+            </div>
+        </div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="dashboard.html"><span class="emoji">📊</span> نظرة عامة</a></li>
+            <li><a href="investments.html"><span class="emoji">💼</span> الاستثمارات النشطة</a></li>
+            <li><a href="my-plan.html"><span class="emoji">🎯</span> خطتي</a></li>
+            <li><a href="wallet.html"><span class="emoji">💰</span> المحفظة</a></li>
+            <li><a href="withdraw.html"><span class="emoji">📤</span> سحب الأرباح</a></li>
+            <li><a href="deposit.html"><span class="emoji">💳</span> الإيداع</a></li>
+            <li><a href="transactions.html"><span class="emoji">📋</span> المعاملات</a></li>
+            <li><a href="activity.html"><span class="emoji">🔄</span> نشاط المنصة</a></li>
+            <li><a href="settings.html"><span class="emoji">⚙️</span> الإعدادات</a></li>
+            <li><a href="index.html"><span class="emoji">🚪</span> تسجيل الخروج</a></li>
+        </ul>
+        <div class="sidebar-footer">© 2026 Binance Invest</div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="page-title">
+                <h1><span class="gold">معاملاتي</span></h1>
+                <p>سجل جميع إيداعاتك وسحوباتك</p>
+            </div>
+            <div class="top-actions">
+                <a href="dashboard.html" class="btn btn-outline">📊 لوحة التحكم</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <div class="num" id="totalDeposits" style="color:#22c55e;">$0</div>
+                    <div class="lbl">إجمالي الإيداعات</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="num" id="totalWithdrawals" style="color:#ef4444;">$0</div>
+                    <div class="lbl">إجمالي السحوبات</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">الكل</button>
+                <button class="filter-btn" data-filter="deposit">💳 إيداع</button>
+                <button class="filter-btn" data-filter="withdraw">📤 سحب</button>
+            </div>
+
+            <div class="transaction-list" id="transactionList">
+                <div style="text-align:center;padding:40px;color:var(--text-muted);">جاري تحميل معاملاتك...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ========== تهيئة Firebase ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyB78JT_cbPMizvzKWBrQoQUe3-zukHrr1U",
+            authDomain: "pharacoin.firebaseapp.com",
+            projectId: "pharacoin",
+            storageBucket: "pharacoin.firebasestorage.app",
+            messagingSenderId: "1047668783635",
+            appId: "1:1047668783635:web:10673630ede69c60181de6",
+            measurementId: "G-06CG470MPX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ========== جزيئات ذهبية ==========
+        const particlesContainer = document.getElementById('particlesContainer');
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div'); p.className = 'particle';
+            p.style.width = p.style.height = (Math.random() * 4 + 2) + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 6 + 's';
+            p.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            particlesContainer.appendChild(p);
+        }
+
+        // ========== متغيرات ==========
+        let myTransactions = [];
+        let currentFilter = 'all';
+        let currentUser = null;
+        let unsubscribeDeposits = null;
+        let unsubscribeWithdrawals = null;
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message; toast.classList.add('show');
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ========== ✅ دالة مساعدة: معالجة حالة المعاملة ==========
+        function getStatusInfo(status) {
+            const normalizedStatus = (status || '').toLowerCase().trim();
+            
+            const statusMap = {
+                'pending':   { text: '⏳ قيد المراجعة', class: 'status-pending',   label: 'قيد المراجعة' },
+                'approved':  { text: '✅ مكتمل',        class: 'status-completed', label: 'مكتمل' },
+                'completed': { text: '✅ مكتمل',        class: 'status-completed', label: 'مكتمل' },
+                'accepted':  { text: '✅ مكتمل',        class: 'status-completed', label: 'مكتمل' },
+                'success':   { text: '✅ مكتمل',        class: 'status-completed', label: 'مكتمل' },
+                'rejected':  { text: '❌ مرفوض',        class: 'status-rejected',  label: 'مرفوض' },
+                'declined':  { text: '❌ مرفوض',        class: 'status-rejected',  label: 'مرفوض' },
+                'failed':    { text: '❌ مرفوض',        class: 'status-rejected',  label: 'مرفوض' }
+            };
+            
+            return statusMap[normalizedStatus] || {
+                text: '❓ غير معروف',
+                class: 'status-pending',
+                label: 'غير معروف'
+            };
+        }
+
+        // ========== 🔄 الاستماع الحي للمعاملات ==========
+        function listenToMyTransactions(uid) {
+            if (unsubscribeDeposits) { unsubscribeDeposits(); unsubscribeDeposits = null; }
+            if (unsubscribeWithdrawals) { unsubscribeWithdrawals(); unsubscribeWithdrawals = null; }
+
+            let depositsData = [];
+            let withdrawalsData = [];
+
+            const renderAll = () => {
+                myTransactions = [...depositsData, ...withdrawalsData];
+                myTransactions.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                renderTransactions(currentFilter);
+            };
+
+            // ✅ الاستماع الحي للإيداعات
+            unsubscribeDeposits = db.collection('deposits')
+                .where('userId', '==', uid)
+                .onSnapshot(snapshot => {
+                    depositsData = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const dateObj = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+                        depositsData.push({
+                            id: doc.id,
+                            type: 'deposit',
+                            amount: data.amount || 0,
+                            method: data.network || data.method || (data.type === 'crypto' ? 'محفظة رقمية' : 'محفظة إلكترونية'),
+                            status: data.status || 'pending',
+                            date: dateObj.toISOString().split('T')[0],
+                            time: dateObj.toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                            txId: doc.id.substring(0, 8).toUpperCase(),
+                            timestamp: dateObj.getTime()
+                        });
+                    });
+                    renderAll();
+                }, err => {
+                    console.error('خطأ في تحميل الإيداعات:', err);
+                    document.getElementById('transactionList').innerHTML = 
+                        `<div style="text-align:center;padding:40px;color:var(--text-muted);"><span style="font-size:48px;">⚠️</span><br>تعذر تحميل الإيداعات</div>`;
+                });
+
+            // ✅ الاستماع الحي للسحوبات
+            unsubscribeWithdrawals = db.collection('withdrawals')
+                .where('userId', '==', uid)
+                .onSnapshot(snapshot => {
+                    withdrawalsData = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const dateObj = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+                        withdrawalsData.push({
+                            id: doc.id,
+                            type: 'withdraw',
+                            amount: data.amount || 0,
+                            method: data.method === 'crypto' ? (data.currency || 'محفظة رقمية') : (data.ewalletName || 'محفظة إلكترونية'),
+                            status: data.status || 'pending',
+                            date: dateObj.toISOString().split('T')[0],
+                            time: dateObj.toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                            txId: doc.id.substring(0, 8).toUpperCase(),
+                            timestamp: dateObj.getTime()
+                        });
+                    });
+                    renderAll();
+                }, err => {
+                    console.error('خطأ في تحميل السحوبات:', err);
+                });
+        }
+
+        // ========== عرض المعاملات ==========
+        function renderTransactions(filter = 'all') {
+            const listEl = document.getElementById('transactionList');
+            let filtered = myTransactions;
+            if (filter !== 'all') filtered = myTransactions.filter(t => t.type === filter);
+
+            const completedDeposits = myTransactions
+                .filter(t => t.type === 'deposit' && (t.status === 'completed' || t.status === 'approved'))
+                .reduce((s, t) => s + (t.amount || 0), 0);
+            const completedWithdrawals = myTransactions
+                .filter(t => t.type === 'withdraw' && (t.status === 'completed' || t.status === 'approved'))
+                .reduce((s, t) => s + (t.amount || 0), 0);
+            
+            document.getElementById('totalDeposits').textContent = '$' + completedDeposits.toLocaleString('en-US');
+            document.getElementById('totalWithdrawals').textContent = '$' + completedWithdrawals.toLocaleString('en-US');
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);"><span style="font-size:48px;">📭</span><br>لا توجد معاملات</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(tx => {
+                const typeLabel = tx.type === 'deposit' ? 'إيداع' : 'سحب';
+                const iconClass = tx.type === 'deposit' ? 'icon-deposit' : 'icon-withdraw';
+                const icon = tx.type === 'deposit' ? '💳' : '📤';
+                const amountClass = tx.type === 'withdraw' ? 'negative' : 'positive';
+                const prefix = tx.type === 'withdraw' ? '-' : '+';
+                
+                const statusInfo = getStatusInfo(tx.status);
+
+                return `
+                    <div class="transaction-item">
+                        <div class="tx-header">
+                            <div class="tx-type">
+                                <div class="icon-circle ${iconClass}">${icon}</div>
+                                <span>${typeLabel}</span>
+                            </div>
+                            <div class="tx-amount ${amountClass}">${prefix}$${tx.amount}</div>
+                        </div>
+                        <div class="tx-details">
+                            <span>📱 ${tx.method}</span>
+                            <span>🔑 ${tx.txId}</span>
+                        </div>
+                        <div class="tx-footer">
+                            <span class="tx-time">📅 ${tx.date} ⏰ ${tx.time}</span>
+                            <span class="tx-status ${statusInfo.class}">${statusInfo.text}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ========== فلترة ==========
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderTransactions(currentFilter);
+            });
+        });
+
+        // ========== مراقبة حالة المستخدم ==========
+        auth.onAuthStateChanged(async user => {
+            currentUser = user;
+            if (user) {
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data.fullName) {
+                            document.getElementById('sidebarUserName').textContent = data.fullName;
+                            document.getElementById('sidebarAvatar').textContent = data.fullName.charAt(0);
+                        }
+                    }
+                } catch (e) {
+                    console.log('تعذر تحديث اسم المستخدم');
+                }
+                listenToMyTransactions(user.uid);
+            } else {
+                if (unsubscribeDeposits) unsubscribeDeposits();
+                if (unsubscribeWithdrawals) unsubscribeWithdrawals();
+                document.getElementById('transactionList').innerHTML = 
+                    `<div style="text-align:center;padding:40px;color:var(--text-muted);"><span style="font-size:48px;">🔒</span><br>يرجى تسجيل الدخول لعرض معاملاتك</div>`;
+            }
+        });
+
+        // ========== Sidebar toggle ==========
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+        menuToggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.addEventListener('touchstart', (e) => { window.touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        sidebar.addEventListener('touchend', (e) => { if (e.changedTouches[0].screenX - window.touchStartX > 80) closeSidebar(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar(); });
+
+        // ==================== ✅ تفعيل الرابط النشط تلقائيًا ====================
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        document.querySelectorAll('#navMenu a').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === currentPage);
+        });
+    </script>
+</body>
+</html>

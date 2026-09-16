@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <title>Binance Invest • استثماراتي</title>
+    <meta name="description" content="إدارة استثماراتك في Binance Invest - أضف خططاً جديدة وتابع أرباحك." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg: rgba(20, 30, 60, 0.35);
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #d0d8f0;
+            --text-muted: #9aa5c0;
+            --border-light: rgba(255, 255, 255, 0.08);
+            --sidebar-width: 260px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            --gap: 20px;
+            --padding-section: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.6;
+            direction: rtl;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: pan-y;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('qs.png') center/cover no-repeat;
+            z-index: -3;
+            opacity: 0.9;
+            filter: brightness(1.1) saturate(1.1);
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(243, 186, 47, 0.04) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(10, 17, 40, 0.55) 0%, transparent 70%), linear-gradient(180deg, rgba(7, 11, 26, 0.45) 0%, rgba(7, 11, 26, 0.65) 100%);
+            z-index: -2;
+            backdrop-filter: blur(2px);
+        }
+        .particles-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .particle {
+            position: absolute;
+            background: var(--gold);
+            border-radius: 50%;
+            filter: blur(1px);
+            animation: floatUp 6s infinite ease-in-out;
+            opacity: 0;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes glowPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(243, 186, 47, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(243, 186, 47, 0.6);
+            }
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .animate-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(10, 17, 40, 0.65);
+            backdrop-filter: blur(25px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 50;
+            transition: transform var(--transition);
+            transform: translateX(0);
+        }
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 36px;
+            padding: 0 8px;
+        }
+        .sidebar-logo .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(243, 186, 47, 0.1);
+            border: 1px solid rgba(243, 186, 47, 0.4);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: glowPulse 2s infinite;
+        }
+        .sidebar-logo .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .sidebar-logo .text {
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--gold);
+            text-shadow: 0 0 15px rgba(243, 186, 47, 0.4);
+        }
+        .nav-menu {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .nav-menu li {
+            margin-bottom: 6px;
+        }
+        .nav-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: rgba(243, 186, 47, 0.15);
+            color: var(--gold);
+            box-shadow: 0 0 15px rgba(243, 186, 47, 0.15);
+        }
+        .nav-menu a .emoji {
+            font-size: 18px;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 0 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 14px;
+        }
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #0a0f1e;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .user-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            padding: var(--padding-section);
+            transition: margin var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap);
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-title h1 {
+            font-size: 26px;
+            font-weight: 900;
+        }
+        .page-title .gold {
+            color: var(--gold);
+        }
+        .page-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .top-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #0a0f1e;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            box-shadow: 0 8px 20px rgba(243, 186, 47, 0.25);
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(243, 186, 47, 0.4);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid rgba(243, 186, 47, 0.5);
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: rgba(243, 186, 47, 0.1);
+        }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--gap);
+        }
+        .card {
+            background: rgba(20, 30, 60, 0.25);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(243, 186, 47, 0.15);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+        .card:hover {
+            border-color: rgba(243, 186, 47, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+        }
+        .card h2 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+        .card h2 .gold {
+            color: var(--gold);
+        }
+        .investments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--gap);
+        }
+        .investment-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.4s ease;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(243, 186, 47, 0.2);
+            overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .investment-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(10, 17, 40, 0.8) 0%, rgba(10, 17, 40, 0.6) 100%);
+            z-index: 0;
+            border-radius: inherit;
+            transition: opacity 0.4s;
+        }
+        .investment-card:hover::before {
+            opacity: 0.7;
+        }
+        .investment-card>* {
+            position: relative;
+            z-index: 1;
+        }
+        .investment-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(243, 186, 47, 0.6);
+            box-shadow: 0 25px 45px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(243, 186, 47, 0.2);
+        }
+        .investment-card .plan-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 14px;
+            text-shadow: 0 0 10px rgba(243, 186, 47, 0.3);
+        }
+        .investment-card .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 0;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .investment-card .detail-row span:last-child {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            margin-top: 14px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(243, 186, 47, 0.5);
+            transition: width 1s ease;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-group {
+            text-align: right;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(243, 186, 47, 0.35);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(243, 186, 47, 0.15);
+        }
+        .form-group select option {
+            background: #0a1128;
+            color: #fff;
+        }
+        .form-group .hint {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            transition: color 0.3s;
+        }
+        .form-group .hint.error {
+            color: #ef4444;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            min-height: 200px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th {
+            text-align: right;
+            padding: 10px 6px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 11px;
+        }
+        td {
+            padding: 10px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-dim);
+            animation: fadeInUp 0.5s ease;
+            font-size: 11px;
+        }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .badge-active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        .badge-completed {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+        .notifications-feed {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-left: 8px;
+        }
+        .notification-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 12px 16px;
+            border-right: 3px solid var(--gold);
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease;
+        }
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(243, 186, 47, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .notification-content {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        .notification-content strong {
+            color: var(--gold);
+            font-weight: 700;
+        }
+        .notification-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .snapshot-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            animation: glowPulse 3s infinite;
+        }
+        .snapshot-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: glowPulse 1.5s infinite;
+        }
+
+        @media (max-width: 992px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-right: 0;
+                padding: 16px;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .investments-grid {
+                grid-template-columns: 1fr;
+            }
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .top-actions {
+                flex-wrap: wrap;
+            }
+            table {
+                font-size: 10px;
+            }
+            th,
+            td {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container" id="particlesContainer"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo"><div class="icon"><img src="qa.png" alt="Logo" /></div><span class="text">BINANCE</span></div>
+        <div class="user-info"><div class="user-avatar">م</div><div><div class="user-name">محمد أحمد</div><div style="font-size:10px;color:var(--text-muted)">مستثمر فضي</div></div></div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="dashboard.html"><span class="emoji">📊</span> نظرة عامة</a></li>
+            <li><a href="investments.html" class="active"><span class="emoji">💼</span> الاستثمارات النشطة</a></li>
+            <li><a href="my-plan.html"><span class="emoji">🎯</span> خطتي</a></li>
+            <li><a href="wallet.html"><span class="emoji">💰</span> المحفظة</a></li>
+            <li><a href="withdraw.html"><span class="emoji">📤</span> سحب الأرباح</a></li>
+            <li><a href="deposit.html"><span class="emoji">💳</span> الإيداع</a></li>
+            <li><a href="transactions.html"><span class="emoji">📋</span> المعاملات</a></li>
+            <li><a href="activity.html"><span class="emoji">🔄</span> نشاط المنصة</a></li>
+            <li><a href="settings.html"><span class="emoji">⚙️</span> الإعدادات</a></li>
+            <li><a href="index.html"><span class="emoji">🚪</span> تسجيل الخروج</a></li>
+        </ul>
+        <div class="sidebar-footer">© 2026 Binance Invest</div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="top-bar animate-in">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="page-title"><h1><span class="gold">استثماراتي</span></h1><p>إدارة ومتابعة جميع خططك الاستثمارية.</p></div>
+            <div class="top-actions">
+                <a href="dashboard.html" class="btn btn-outline">📊 لوحة التحكم</a>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card animate-in" style="animation-delay: 0.05s;">
+                <h2>🔔 <span class="gold">آخر النشاطات على المنصة</span></h2>
+                <div class="notifications-feed" id="notificationsFeed"></div>
+            </div>
+
+            <div class="card animate-in" style="animation-delay: 0.1s;">
+                <h2>📌 <span class="gold">الاستثمارات النشطة</span></h2>
+                <div class="investments-grid" id="activeInvestmentsGrid">
+                    <a href="deposit.html" class="investment-card" data-plan="silver" style="background-image: url('qq.png');"><div class="plan-name">الخطة الفضية</div><div class="detail-row"><span>المبلغ</span><span>$100</span></div><div class="detail-row"><span>الربح اليومي</span><span>$50</span></div><div class="detail-row"><span>المدة</span><span>10 أيام</span></div><div class="detail-row"><span>المتبقي</span><span>4 أيام</span></div><div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div><div style="font-size:11px;color:var(--text-dim);margin-top:6px;">60% مكتمل</div></a>
+                    <a href="deposit.html" class="investment-card" data-plan="gold" style="background-image: url('qw.png');"><div class="plan-name">الخطة الذهبية</div><div class="detail-row"><span>المبلغ</span><span>$500</span></div><div class="detail-row"><span>الربح اليومي</span><span>$250</span></div><div class="detail-row"><span>المدة</span><span>10 أيام</span></div><div class="detail-row"><span>المتبقي</span><span>7 أيام</span></div><div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div><div style="font-size:11px;color:var(--text-dim);margin-top:6px;">30% مكتمل</div></a>
+                    <a href="deposit.html" class="investment-card" data-plan="diamond" style="background-image: url('qe.png');"><div class="plan-name">الخطة الماسية</div><div class="detail-row"><span>المبلغ</span><span>$1000</span></div><div class="detail-row"><span>الربح اليومي</span><span>$500</span></div><div class="detail-row"><span>المدة</span><span>10 أيام</span></div><div class="detail-row"><span>المتبقي</span><span>9 أيام</span></div><div class="progress-bar"><div class="progress-fill" style="width:10%"></div></div><div style="font-size:11px;color:var(--text-dim);margin-top:6px;">10% مكتمل</div></a>
+                </div>
+            </div>
+
+            <div class="card animate-in" style="animation-delay: 0.2s;">
+                <h2>➕ <span class="gold">إضافة استثمار جديد</span></h2>
+                <form id="newInvestmentForm" style="display:flex; flex-direction:column; gap:20px;">
+                    <div class="form-grid">
+                        <div class="form-group"><label>الخطة</label><select id="planSelect" required><option value="">اختر الخطة...</option><option value="bronze">البرونزية ($30)</option><option value="silver">الفضية ($100)</option><option value="gold">الذهبية ($500)</option><option value="diamond">الماسية ($1000)</option></select></div>
+                        <div class="form-group"><label>المبلغ ($) <span style="color:#ef4444; font-size:11px;">* الحد الأدنى 30$</span></label><input type="text" id="amount" inputmode="decimal" lang="en" pattern="[0-9]*\.?[0-9]*" placeholder="30" min="30" required autocomplete="off" /><div class="hint" id="amountHint">أدخل المبلغ بالأرقام الإنجليزية (الحد الأدنى: $30)</div></div>
+                        <div class="form-group"><label>المدة (أيام) <span style="color:#ef4444; font-size:11px;">* الحد الأدنى 10 أيام</span></label><input type="text" id="duration" inputmode="decimal" lang="en" pattern="[0-9]*" placeholder="10" min="10" required autocomplete="off" /><div class="hint" id="durationHint">الحد الأدنى للمدة: 10 أيام</div></div>
+                        <div class="form-group"><label>نسبة الربح اليومي (%)</label><input type="text" id="dailyRate" value="50%" readonly /></div>
+                    </div>
+                    <button type="submit" class="btn" style="align-self: flex-start;">🚀 بدء الاستثمار</button>
+                </form>
+            </div>
+
+            <div class="card animate-in" style="animation-delay: 0.3s;">
+                <h2>📋 <span class="gold">سجل الاستثمارات</span> <span style="font-size:11px; color:var(--text-muted);">(يضم 30,000 مستثمر)</span></h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>الاسم</th>
+                                <th>المحافظة</th>
+                                <th>الخطة</th>
+                                <th>المبلغ</th>
+                                <th>الحالة</th>
+                                <th>الربح</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==================== نظام Snapshot لإدارة الأرباح والمحفظة ====================
+        const INVESTMENTS_STORAGE_KEY = 'binance_investments_data';
+        const WALLET_STORAGE_KEY = 'binance_wallet_balance';
+        const SNAPSHOT_INTERVAL_MS = 60000;
+
+        function getInvestmentsData() {
+            try {
+                const raw = localStorage.getItem(INVESTMENTS_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveInvestmentsData(data) {
+            localStorage.setItem(INVESTMENTS_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function getWalletBalance() {
+            try {
+                const raw = localStorage.getItem(WALLET_STORAGE_KEY);
+                return raw ? parseFloat(raw) : 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function setWalletBalance(balance) {
+            localStorage.setItem(WALLET_STORAGE_KEY, balance.toString());
+        }
+
+        function addWalletBalance(amount) {
+            const current = getWalletBalance();
+            setWalletBalance(current + amount);
+            return current + amount;
+        }
+
+        const planDefaults = {
+            bronze: { name: 'البرونزية', minAmount: 30, dailyRate: 0.50, minDuration: 10, bgImage: 'qq.png' },
+            silver: { name: 'الفضية', minAmount: 100, dailyRate: 0.50, minDuration: 10, bgImage: 'qq.png' },
+            gold: { name: 'الذهبية', minAmount: 500, dailyRate: 0.50, minDuration: 10, bgImage: 'qw.png' },
+            diamond: { name: 'الماسية', minAmount: 1000, dailyRate: 0.50, minDuration: 10, bgImage: 'qe.png' }
+        };
+
+        function createInvestment(planKey, amount, durationDays) {
+            const plan = planDefaults[planKey];
+            if (!plan) return null;
+            const now = new Date();
+            const investment = {
+                id: 'inv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                planKey: planKey,
+                planName: plan.name,
+                amount: amount,
+                dailyRate: plan.dailyRate,
+                dailyProfit: amount * plan.dailyRate,
+                durationDays: durationDays,
+                startDate: now.toISOString(),
+                endDate: new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString(),
+                totalProfit: amount * plan.dailyRate * durationDays,
+                accumulatedProfit: 0,
+                lastSnapshotDate: now.toISOString(),
+                status: 'active',
+                bgImage: plan.bgImage
+            };
+            const investments = getInvestmentsData();
+            investments.push(investment);
+            saveInvestmentsData(investments);
+            return investment;
+        }
+
+        function runSnapshot() {
+            const investments = getInvestmentsData();
+            if (investments.length === 0) return;
+            const now = new Date();
+            let totalAdded = 0;
+            let updated = false;
+            investments.forEach(inv => {
+                if (inv.status !== 'active') return;
+                const lastSnapshot = new Date(inv.lastSnapshotDate);
+                const diffMs = now - lastSnapshot;
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                if (diffDays >= 0.9) {
+                    const fullDays = Math.floor(diffDays);
+                    if (fullDays > 0) {
+                        const remainingDays = Math.max(0, inv.durationDays - Math.floor((now - new Date(inv.startDate)) / (1000 * 60 * 60 * 24)));
+                        const daysToAdd = Math.min(fullDays, remainingDays);
+                        if (daysToAdd > 0) {
+                            const addedProfit = daysToAdd * inv.dailyProfit;
+                            inv.accumulatedProfit += addedProfit;
+                            inv.lastSnapshotDate = new Date(lastSnapshot.getTime() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+                            totalAdded += addedProfit;
+                            updated = true;
+                            const totalDaysPassed = Math.floor((now - new Date(inv.startDate)) / (1000 * 60 * 60 * 24));
+                            if (totalDaysPassed >= inv.durationDays) {
+                                inv.status = 'completed';
+                                inv.accumulatedProfit = inv.totalProfit;
+                            }
+                        }
+                    }
+                }
+            });
+            if (updated) {
+                saveInvestmentsData(investments);
+                if (totalAdded > 0) {
+                    addWalletBalance(totalAdded);
+                }
+            }
+            updateActiveInvestmentsUI();
+        }
+
+        function updateActiveInvestmentsUI() {
+            const grid = document.getElementById('activeInvestmentsGrid');
+            if (!grid) return;
+            const investments = getInvestmentsData();
+            const activeInvestments = investments.filter(inv => inv.status === 'active');
+            if (activeInvestments.length === 0) {
+                grid.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);">لا توجد استثمارات نشطة حالياً. أضف استثماراً جديداً للبدء.</div>';
+                return;
+            }
+            grid.innerHTML = activeInvestments.map(inv => {
+                const now = new Date();
+                const start = new Date(inv.startDate);
+                const totalDaysPassed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+                const remainingDays = Math.max(0, inv.durationDays - totalDaysPassed);
+                const progressPercent = Math.min(100, Math.round((totalDaysPassed / inv.durationDays) * 100));
+                const currentProfit = inv.accumulatedProfit || 0;
+                return `
+                    <a href="deposit.html" class="investment-card" data-plan="${inv.planKey}" style="background-image: url('${inv.bgImage}');">
+                        <div class="plan-name">${inv.planName}</div>
+                        <div class="detail-row"><span>المبلغ</span><span>$${inv.amount}</span></div>
+                        <div class="detail-row"><span>الربح اليومي</span><span>$${inv.dailyProfit}</span></div>
+                        <div class="detail-row"><span>المدة</span><span>${inv.durationDays} أيام</span></div>
+                        <div class="detail-row"><span>المتبقي</span><span>${remainingDays} أيام</span></div>
+                        <div class="detail-row"><span>الأرباح المحققة</span><span style="color:#4ade80;">$${currentProfit.toFixed(2)}</span></div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${progressPercent}%"></div></div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:6px;">${progressPercent}% مكتمل</div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function initializeDefaultInvestments() {
+            const existing = getInvestmentsData();
+            if (existing.length === 0) {
+                const now = new Date();
+                const defaults = [
+                    { planKey: 'silver', amount: 100, durationDays: 10, daysPassed: 6, accumulatedProfit: 300 },
+                    { planKey: 'gold', amount: 500, durationDays: 10, daysPassed: 3, accumulatedProfit: 750 },
+                    { planKey: 'diamond', amount: 1000, durationDays: 10, daysPassed: 1, accumulatedProfit: 500 }
+                ];
+                defaults.forEach(d => {
+                    const plan = planDefaults[d.planKey];
+                    const startDate = new Date(now.getTime() - d.daysPassed * 24 * 60 * 60 * 1000);
+                    const investment = {
+                        id: 'inv_default_' + d.planKey + '_' + Date.now(),
+                        planKey: d.planKey,
+                        planName: plan.name,
+                        amount: d.amount,
+                        dailyRate: plan.dailyRate,
+                        dailyProfit: d.amount * plan.dailyRate,
+                        durationDays: d.durationDays,
+                        startDate: startDate.toISOString(),
+                        endDate: new Date(startDate.getTime() + d.durationDays * 24 * 60 * 60 * 1000).toISOString(),
+                        totalProfit: d.amount * plan.dailyRate * d.durationDays,
+                        accumulatedProfit: d.accumulatedProfit,
+                        lastSnapshotDate: startDate.toISOString(),
+                        status: 'active',
+                        bgImage: plan.bgImage
+                    };
+                    existing.push(investment);
+                });
+                saveInvestmentsData(existing);
+                if (existing.length > 0) {
+                    const totalInitialProfit = existing.reduce((sum, inv) => sum + (inv.accumulatedProfit || 0), 0);
+                    if (getWalletBalance() === 0) {
+                        setWalletBalance(totalInitialProfit);
+                    }
+                }
+            }
+        }
+
+        setInterval(runSnapshot, SNAPSHOT_INTERVAL_MS);
+
+        initializeDefaultInvestments();
+        runSnapshot();
+        updateActiveInvestmentsUI();
+
+        // ==================== الجزيئات الذهبية ====================
+        const particlesContainer = document.getElementById('particlesContainer');
+        for (let i = 0; i < 25; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            const size = Math.random() * 4 + 2;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particle.style.animationDuration = Math.random() * 5 + 5 + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // ==================== Sidebar ====================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function openSidebar() { sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; }
+
+        function closeSidebar() { sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = ''; }
+        menuToggle.addEventListener('click', () => { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.addEventListener('touchstart', (e) => { window.touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        sidebar.addEventListener('touchend', (e) => { if (e.changedTouches[0].screenX - window.touchStartX > 80) closeSidebar(); });
+
+        // ==================== تفعيل الرابط النشط تلقائيًا ====================
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        document.querySelectorAll('#navMenu a').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === currentPage);
+        });
+
+        // ==================== نموذج الاستثمار ====================
+        const amountInput = document.getElementById('amount');
+        const durationInput = document.getElementById('duration');
+        const amountHint = document.getElementById('amountHint');
+        const durationHint = document.getElementById('durationHint');
+
+        function filterEnglishNumbers(value) { return value.replace(/[^0-9.]/g, ''); }
+        amountInput.addEventListener('input', function() {
+            this.value = filterEnglishNumbers(this.value);
+            const v = parseFloat(this.value);
+            if (this.value === '') { amountHint.textContent = 'أدخل المبلغ بالأرقام الإنجليزية (الحد الأدنى: $30)';
+                amountHint.classList.remove('error');
+                amountHint.style.color = ''; } else if (isNaN(v) || v < 30) { amountHint.textContent =
+                '⚠️ الحد الأدنى للاستثمار هو 30 دولار';
+                amountHint.classList.add('error');
+                amountHint.style.color = '#ef4444'; } else { amountHint.textContent = '✓ مبلغ صالح';
+                amountHint.classList.remove('error');
+                amountHint.style.color = '#22c55e'; }
+        });
+        durationInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            const v = parseInt(this.value);
+            if (this.value === '') { durationHint.textContent = 'الحد الأدنى للمدة: 10 أيام';
+                durationHint.classList.remove('error');
+                durationHint.style.color = ''; } else if (isNaN(v) || v < 10) { durationHint.textContent =
+                '⚠️ الحد الأدنى للمدة هو 10 أيام';
+                durationHint.classList.add('error');
+                durationHint.style.color = '#ef4444'; } else { durationHint.textContent = '✓ مدة صالحة';
+                durationHint.classList.remove('error');
+                durationHint.style.color = '#22c55e'; }
+        });
+
+        document.getElementById('newInvestmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const plan = document.getElementById('planSelect').value;
+            const amount = parseFloat(amountInput.value);
+            const duration = parseInt(durationInput.value);
+            if (!plan) { alert('الرجاء اختيار خطة.');
+                return; }
+            if (isNaN(amount) || amount < 30) { alert('الحد الأدنى للاستثمار هو 30 دولار.');
+                amountInput.focus(); return; }
+            if (isNaN(duration) || duration < 10) { alert('الحد الأدنى للمدة هو 10 أيام.');
+                durationInput.focus(); return; }
+            const newInv = createInvestment(plan, amount, duration);
+            if (newInv) {
+                updateActiveInvestmentsUI();
+                runSnapshot();
+                alert('✅ تم إنشاء الاستثمار بنجاح!\nالخطة: ' + newInv.planName + '\nالمبلغ: $' + newInv.amount +
+                    '\nالربح اليومي: $' + newInv.dailyProfit + '\nالمدة: ' + newInv.durationDays + ' أيام');
+                window.location.href =
+                    `deposit.html?plan=${encodeURIComponent(plan)}&amount=${encodeURIComponent(amount)}&duration=${encodeURIComponent(duration)}`;
+            }
+        });
+        document.getElementById('planSelect').addEventListener('change', function() { document.getElementById('dailyRate')
+                .value = '50%'; });
+
+        // ==================== الإشعارات ====================
+        const notifications = [
+            { icon: '💳', text: '<strong>أحمد علي</strong> اشترك في الخطة <strong>الذهبية</strong>',
+            time: 'منذ دقيقة' },
+            { icon: '💰', text: '<strong>سارة محمود</strong> قامت بسحب <strong>$250</strong> من أرباحها',
+                time: 'منذ 3 دقائق' },
+            { icon: '📈', text: '<strong>خالد يوسف</strong> حقق ربحاً يومياً <strong>$500</strong>', time: 'منذ 5 دقائق' },
+            { icon: '🚀', text: '<strong>منى إبراهيم</strong> بدأت الخطة <strong>الماسية</strong>', time: 'منذ 8 دقائق' },
+            { icon: '🎉', text: '<strong>عمر الخطيب</strong> أكمل خطته <strong>الفضية</strong> بنجاح',
+                time: 'منذ 10 دقائق' },
+            { icon: '💸', text: '<strong>ليلى حسن</strong> أودعت <strong>$1000</strong> في المحفظة', time: 'منذ 12 دقيقة' },
+            { icon: '🏆', text: '<strong>يوسف نادر</strong> حقق <strong>$2,500</strong> أرباحاً إجمالية',
+                time: 'منذ 15 دقيقة' },
+            { icon: '✨', text: '<strong>فاطمة علي</strong> قامت بالترقية إلى <strong>VIP</strong>', time: 'منذ 18 دقيقة' }
+        ];
+        const feedContainer = document.getElementById('notificationsFeed');
+        let currentNotifIndex = 0;
+
+        function renderNotifications(count = 5) {
+            feedContainer.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const idx = (currentNotifIndex + i) % notifications.length;
+                const n = notifications[idx];
+                const div = document.createElement('div');
+                div.className = 'notification-item';
+                div.innerHTML =
+                    `<div class="notification-icon">${n.icon}</div><div class="notification-content">${n.text}<div class="notification-time">${n.time}</div></div>`;
+                feedContainer.appendChild(div);
+            }
+        }
+
+        function rotateNotifications() { currentNotifIndex = (currentNotifIndex + 1) % notifications.length;
+            renderNotifications(5); }
+        renderNotifications(5);
+        setInterval(rotateNotifications, 4000);
+
+        // ==================== جدول سجل الاستثمارات الحي ====================
+        const firstNames = [
+            "محمد", "أحمد", "علي", "عمر", "خالد", "يوسف", "حسن", "محمود", "إبراهيم", "طارق",
+            "سعيد", "نادر", "كريم", "مصطفى", "عمرو", "هشام", "وليد", "جمال", "فادي", "رامي",
+            "أيمن", "شريف", "علاء", "أسامة", "باسم", "ناصر", "مجدي", "صبحي", "عادل", "فؤاد",
+            "رياض", "غسان", "زياد", "حمزة", "أنس", "بدر", "جابر", "حاتم", "رائد", "سامر",
+            "شادي", "ظافر", "عامر", "غالب", "فارس", "قاسم", "لؤي", "مازن", "نواف", "هادي",
+            "أكرم", "بلال", "تامر", "ثائر", "جهاد", "حمدي", "رامز", "سلمان", "شهاب", "مروان"
+        ];
+        const lastNames = [
+            "عبدالله", "الحسين", "الخطيب", "النادي", "السيد", "النجار", "الفقي", "الجندي", "الشريف", "الغريب",
+            "الطويل", "القاضي", "الوكيل", "البدوي", "الرفاعي", "العريان", "الكيلاني", "المصري", "الهواري", "البرادعي",
+            "الجمل", "حامد", "خليل", "درويش", "رشيد", "سلامة", "طه", "عاشور", "فتحي", "قنديل",
+            "لطفي", "مراد", "ناجي", "هاني", "وائل", "البنا", "التهامي", "الحلبي", "الزعبي", "الشرقاوي",
+            "العجمي", "الغامدي", "القرشي", "المالكي", "اليافعي", "بسيوني", "جنيدي", "رمضان", "شعبان", "عفيفي",
+            "الأسمر", "الأيوبي", "البغدادي", "التميمي", "الجبالي", "الحريري", "الخالدي", "الزبيدي", "السراج", "العمري"
+        ];
+        const governorates = [
+            "القاهرة", "الإسكندرية", "الجيزة", "القليوبية", "البحيرة", "مطروح", "دمياط", "الدقهلية",
+            "الشرقية", "الغربية", "المنوفية", "كفر الشيخ", "بورسعيد", "الإسماعيلية", "السويس",
+            "شمال سيناء", "جنوب سيناء", "بني سويف", "الفيوم", "المنيا", "أسيوط", "سوهاج",
+            "قنا", "الأقصر", "أسوان", "الوادي الجديد", "البحر الأحمر", "مرسى مطروح"
+        ];
+        const plansList = ["البرونزية", "الفضية", "الذهبية", "الماسية"];
+        const amountsList = [30, 100, 500, 1000];
+        const statusesList = ["نشطة", "مكتملة"];
+
+        let globalTableIndex = 0;
+        const MAX_INDEX = 30000;
+        const ROWS_PER_SET = 5;
+
+        function generateTableRow(index) {
+            const firstNameIdx = (index * 7 + 1) % firstNames.length;
+            const lastNameIdx = (index * 13 + 5) % lastNames.length;
+            const govIdx = (index * 17 + 3) % governorates.length;
+            const fullName = `${firstNames[firstNameIdx]} ${lastNames[lastNameIdx]}`;
+            const governorate = governorates[govIdx];
+            const plan = plansList[index % plansList.length];
+            const amount = amountsList[index % amountsList.length];
+            const status = statusesList[index % statusesList.length];
+            const profit = amount * 0.5 * 10;
+            const day = 1 + (index % 28);
+            const month = 6 + (Math.floor(index / 28) % 2);
+            const dateStr = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            return { date: dateStr, fullName, governorate, plan, amount: `$${amount}`, status, profit: `$${profit}` };
+        }
+
+        function renderTransactionTable(startIndex) {
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = '';
+            for (let i = 0; i < ROWS_PER_SET; i++) {
+                const idx = (startIndex + i) % MAX_INDEX;
+                const row = generateTableRow(idx);
+                const statusBadge = row.status === 'نشطة' ?
+                    '<span class="badge badge-active">نشطة</span>' :
+                    '<span class="badge badge-completed">مكتملة</span>';
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    `<td>${row.date}</td><td>${row.fullName}</td><td>${row.governorate}</td><td>${row.plan}</td><td>${row.amount}</td><td>${statusBadge}</td><td>${row.profit}</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function rotateTransactionTable() {
+            globalTableIndex = (globalTableIndex + ROWS_PER_SET) % MAX_INDEX;
+            renderTransactionTable(globalTableIndex);
+        }
+        renderTransactionTable(0);
+        globalTableIndex = 0;
+        setInterval(rotateTransactionTable, 5000);
+
+        // ==================== تحديث دوري لواجهة الاستثمارات ====================
+        setInterval(updateActiveInvestmentsUI, 15000);
+        setInterval(runSnapshot, 30000);
+
+        console.log('✅ نظام Snapshot مُفعّل | الاستثمارات:', getInvestmentsData().length, '| رصيد المحفظة: $' +
+            getWalletBalance().toFixed(2));
+    </script>
+</body>
+</html>

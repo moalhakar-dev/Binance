@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Binance Invest • الشروط والأحكام</title>
+    <meta name="description" content="الشروط والأحكام الخاصة بمنصة Binance Invest." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-deep: #070b1a;
+            --card-bg: rgba(15, 25, 55, 0.03); /* شفافية شبه كاملة */
+            --gold: #f3ba2f;
+            --gold-light: #fcd970;
+            --gold-dark: #b8871e;
+            --text: #ffffff;
+            --text-dim: #e8ecf5;
+            --text-muted: #a0a8c0;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.7;
+            direction: rtl;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* خلفية qe.png واضحة بالكامل */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('qe.png') center/cover no-repeat;
+            z-index: -3;
+            opacity: 1;
+            filter: brightness(1.2) saturate(1.1);
+        }
+
+        /* طبقة تظليل خفيفة جداً جداً */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 30%, rgba(10, 17, 40, 0.02) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 70%, rgba(10, 17, 40, 0.04) 0%, transparent 70%),
+                        linear-gradient(180deg, rgba(7, 11, 26, 0.04) 0%, rgba(7, 11, 26, 0.1) 100%);
+            z-index: -2;
+            backdrop-filter: none;
+        }
+
+        /* جزيئات ذهبية */
+        .particles-container {
+            position: fixed; inset: 0; pointer-events: none; z-index: -1;
+        }
+        .particle {
+            position: absolute; background: var(--gold); border-radius: 50%;
+            filter: blur(1px); animation: floatUp 6s infinite ease-in-out; opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.5; } 90% { opacity: 0.2; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            z-index: 1;
+        }
+
+        /* شريط علوي بسيط */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .back-link {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9);
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--gold-light); }
+        .logo-sm {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9);
+        }
+        .logo-sm .icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(243,186,47,0.15); border: 1px solid rgba(243,186,47,0.4);
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(243,186,47,0.3);
+        }
+        .logo-sm .icon img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-sm .text { font-weight: 900; font-size: 18px; color: var(--gold); }
+
+        /* كارت الشروط - شفاف بالكامل */
+        .terms-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(1px);
+            border: 1px solid rgba(243,186,47,0.15);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+            text-shadow: 0 0 15px rgba(0,0,0,0.95);
+        }
+        .terms-card h1 {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 8px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0,0,0,0.95), 0 0 15px rgba(243,186,47,0.5);
+        }
+        .terms-card .last-update {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+        .terms-card h2 {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--gold-light);
+            margin-top: 26px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(0,0,0,0.95);
+        }
+        .terms-card p, .terms-card li {
+            font-size: 13px; /* تصغير الخط */
+            color: var(--text-dim);
+            line-height: 1.9;
+            margin-bottom: 10px;
+        }
+        .terms-card ul {
+            list-style: none;
+            padding-right: 20px;
+        }
+        .terms-card ul li::before {
+            content: '•';
+            color: var(--gold);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-right: -1em;
+        }
+        .terms-card .contact-link {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+        .terms-card .contact-link:hover {
+            color: var(--gold-light);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .terms-card {
+                padding: 28px 18px;
+            }
+            .terms-card h1 {
+                font-size: 24px;
+            }
+            .terms-card h2 {
+                font-size: 17px;
+            }
+            .terms-card p, .terms-card li {
+                font-size: 12px;
+            }
+            .main-container {
+                padding: 20px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <div class="main-container">
+        <div class="top-bar">
+            <a href="javascript:history.back()" class="back-link">← العودة</a>
+            <div class="logo-sm">
+                <div class="icon"><img src="qa.png" alt="Binance Logo" /></div>
+                <span class="text">BINANCE INVEST</span>
+            </div>
+        </div>
+
+        <div class="terms-card">
+            <h1>الشروط والأحكام</h1>
+            <p class="last-update">آخر تحديث: 1 يناير 2026</p>
+
+            <p>مرحباً بك في Binance Invest. باستخدامك لمنصتنا، فإنك توافق على الالتزام بالشروط والأحكام التالية. يرجى قراءتها بعناية قبل التسجيل أو الاستثمار.</p>
+
+            <h2>1. القبول</h2>
+            <p>باستخدامك للموقع أو التطبيق، فإنك تقر بأنك قد قرأت وفهمت ووافقت على هذه الشروط. إذا كنت لا توافق على أي جزء من هذه الشروط، فيرجى عدم استخدام المنصة.</p>
+
+            <h2>2. الأهلية</h2>
+            <p>يجب أن يكون عمرك 18 عاماً على الأقل لاستخدام خدماتنا. باستخدامك للمنصة، فإنك تقر بأنك تستوفي هذا الشرط.</p>
+
+            <h2>3. الحسابات</h2>
+            <ul>
+                <li>أنت مسؤول عن الحفاظ على سرية بيانات حسابك وكلمة المرور.</li>
+                <li>يجب أن تكون جميع المعلومات التي تقدمها دقيقة وكاملة.</li>
+                <li>يحق لنا تعليق أو إنهاء حسابك في أي وقت إذا انتهكت هذه الشروط.</li>
+            </ul>
+
+            <h2>4. الاستثمارات</h2>
+            <p>جميع خطط الاستثمار تخضع لتوفرها وتأكيدها. نحن لا نضمن أرباحاً ثابتة، وجميع الاستثمارات تحمل مخاطر. يجب عليك استثمار ما يمكنك تحمل خسارته فقط.</p>
+
+            <h2>5. عمليات السحب والإيداع</h2>
+            <ul>
+                <li>تخضع جميع طلبات السحب للمراجعة والموافقة.</li>
+                <li>قد تستغرق معالجة السحب من 24 إلى 72 ساعة عمل.</li>
+                <li>يجب استخدام طرق الدفع المسموح بها فقط.</li>
+                <li>أي محاولة احتيال ستؤدي إلى تعليق الحساب بشكل دائم.</li>
+            </ul>
+
+            <h2>6. الملكية الفكرية</h2>
+            <p>جميع المحتويات والعلامات التجارية والشعارات على هذا الموقع هي ملك لـ Binance Invest ولا يجوز استخدامها دون إذن كتابي مسبق.</p>
+
+            <h2>7. حدود المسؤولية</h2>
+            <p>لا تتحمل Binance Invest أي مسؤولية عن أي خسائر أو أضرار تنشأ عن استخدام المنصة، بما في ذلك على سبيل المثال لا الحصر: تقلبات السوق، الأعطال التقنية، أو القوة القاهرة.</p>
+
+            <h2>8. التعديلات</h2>
+            <p>نحتفظ بالحق في تعديل هذه الشروط في أي وقت. سيتم إخطارك بالتغييرات عبر البريد الإلكتروني أو إشعار على المنصة. استمرارك في استخدام المنصة بعد التعديلات يعتبر موافقة على الشروط الجديدة.</p>
+
+            <h2>9. الاتصال</h2>
+            <p>إذا كان لديك أي أسئلة حول هذه الشروط، يرجى التواصل معنا عبر تيليجرام على اليوزر: <a href="https://t.me/BinanceInvestmentsSupport" target="_blank" class="contact-link">@BinanceInvestmentsSupport</a></p>
+        </div>
+    </div>
+
+    <script>
+        // جزيئات ذهبية
+        const particlesContainer = document.getElementById('particlesContainer');
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div'); p.className = 'particle';
+            p.style.width = p.style.height = (Math.random() * 4 + 2) + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 6 + 's';
+            p.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            particlesContainer.appendChild(p);
+        }
+    </script>
+</body>
+</html>
